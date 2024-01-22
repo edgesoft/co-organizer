@@ -1,0 +1,5 @@
+# base node image
+FROM node:21-bullseye-slim as base
+
+# Install openssl for Prisma
+RUN apt-get update && apt-get install -y openssl git
