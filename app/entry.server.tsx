@@ -11,6 +11,25 @@ import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
+import { getNextUrl } from "./utils/getNextUrl";
+import cron from 'node-cron';
+import fetch from 'node-fetch';
+
+let heartbeat = false;
+function setupHeartBeat(request: Request) {
+  if (heartbeat) return;
+  heartbeat = true;
+  const { port, proto, hostname } = getNextUrl(request);
+  const url = `${proto}://${hostname}`;
+  if (hostname !== "localhost") {
+    console.log(`setup heartbeat for ${url}`);
+    cron.schedule("*/5 * * * * *", () => {
+      fetch(url)
+        .then(() => {})
+        .catch((error) => console.error(`Error pinging app:`, error));
+    });
+  }
+}
 
 const ABORT_DELAY = 5_000;
 
@@ -24,6 +43,7 @@ export default function handleRequest(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   loadContext: AppLoadContext
 ) {
+  setupHeartBeat(request);
   return isbot(request.headers.get("user-agent") || "")
     ? handleBotRequest(
         request,

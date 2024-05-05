@@ -1,6 +1,8 @@
 node_modules
-
+.DS_Store
 /.cache
 /build
 /public/build
 .env
+co-organizer-firebase-adminsdk-4bc6a-f64a0f0c66.json
+/postgres_data

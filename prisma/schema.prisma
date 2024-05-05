@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionType {
+  TALK
+  CHAIR_MAN_ROOM
+  CHECKING_SPEAKERS
+  MUSIC
+  PRAYER
+  CHAIR_MAN
+  PODIUM_PRACTICE
+  VIDEO
+  SKE
+}
+
+enum Role {
+  ADMIN // all rights
+  WORKER // brothers in helping CHAIR_MAN
+  PROGRAM // brothers in audio/video/program
+}
+
+enum StepType {
+  RECEIVED_ASSIGNMENT
+  PRACTICE_DONE
+  PODIUM_PRACTICE_DONE
+  REGISTERED_ON_FIRST_DAY
+  REGISTERED_ON_SPEAKING_DAY
+  REGISTERED_30_MINUTES_BEFORE_SPEAKING
+}
+
+enum ConventType {
+  REGIONAL
+  CIRCUIT
+  PIONEER_MEETING
+  KMS
+}
+
+model Convent {
+  id          Int       @id @default(autoincrement())
+  theme       String
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  description String?
+  image       String
+  identifier  String
+  sessions    Session[] @relation("ConventSessions") // Detta skapar en en-till-många-relation mellan Convent och Session
+  conventType   ConventType
+  conventCircuits ConventCircuit[]
+}
+
+model GroupSession {
+  id            Int        @id @default(autoincrement())
+  date          DateTime
+  startHour     Int
+  stopHour      Int
+  startMinutes  Int
+  stopMinutes   Int
+  sessions      Session[]  // Ta bort @relation(references: [id]) då det inte behövs här
+}
+
+model Session {
+  id              Int            @id @default(autoincrement())
+  identifier      String         @unique
+  date            DateTime
+  startHour       Int 
+  stopHour        Int 
+  startMinutes    Int
+  stopMinutes     Int 
+  theme           String
+  type            SessionType 
+  participants    String?
+  publishers      SessionPublisher[]
+  steps           SessionStep[]
+  conventId       Int
+  convent         Convent       @relation(fields: [conventId], references: [id], name: "ConventSessions") // Definierar relationen
+  groupSessionId  Int?          // Lägger till referens till GroupSession
+  groupSession    GroupSession? @relation(fields: [groupSessionId], references: [id]) // Definierar relationen
+
+  @@index([theme])
+}
+
+model SessionStep {
+  id          Int       @id @default(autoincrement())
+  stepType    StepType
+  isCompleted Boolean   @default(false) // Indikerar om steget har slutförts
+  sessionId   Int
+  session     Session   @relation(fields: [sessionId], references: [id])
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String
+  name        String
+  role        Role
+  phoneNumber String
+}
+
+model Publisher {
+  id              Int    @id @default(autoincrement())
+  name            String 
+  congregation    String
+  circuit         String
+  circuitSection  String?
+  sessions        SessionPublisher[]
+
+  @@index([name])
+}
+
+model SessionPublisher {
+  sessionId     Int
+  publisherId   Int
+  session       Session     @relation(fields: [sessionId], references: [id])
+  publisher     Publisher   @relation(fields: [publisherId], references: [id])
+
+  @@id([sessionId, publisherId])
+}
+
+model ConventCircuit {
+  id        Int      @id @default(autoincrement())
+  conventId Int
+  circuit   String
+  section   String? // Kan vara null för att representera hela kretsar
+  convent   Convent @relation(fields: [conventId], references: [id])
+
+  @@unique([conventId, circuit, section])
+}

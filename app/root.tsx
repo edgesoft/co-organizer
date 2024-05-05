@@ -9,10 +9,13 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import stylesheet from "~/tailwind.css";
+import s from "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
-export const links: LinksFunction = () => 
-  [{ rel: "stylesheet", href: stylesheet }]
-;
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: stylesheet },
+  { rel: "stylesheet", href: s },
+];
 
 export default function App() {
   return (
@@ -20,11 +23,13 @@ export default function App() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/logo2.png" type="image/png" />
         <Meta />
         <Links />
       </head>
       <body>
         <Outlet />
+        <ToastContainer />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
