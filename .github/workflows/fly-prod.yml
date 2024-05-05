@@ -2,7 +2,7 @@ name: Fly Production
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   deploy:
     name: Deploy app production
