@@ -27,7 +27,7 @@ enum SessionType {
 
 enum Role {
   ADMIN // all rights
-  WORKER // brothers in helping CHAIR_MAN
+  WORKER // brothers in helping CHAIR_MAN_ROOM
   PROGRAM // brothers in audio/video/program
 }
 
