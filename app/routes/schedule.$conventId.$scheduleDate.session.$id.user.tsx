@@ -37,6 +37,7 @@ interface GroupType {
 
 const formSchema = z.object({
   action: z.string().min(1),
+  participants: z.string().optional(),
   publishers: z
     .array(
       z.object({
@@ -123,6 +124,16 @@ export let action: ActionFunction = async ({ request, params }) => {
           await prisma.sessionPublisher.createMany({
             data: sessionPublishersData,
           });
+
+          await prisma.session.update({
+            where: {
+              id: Number(params.id)
+            },
+           data: {
+            participants: result.participants
+           }
+          })
+
           return redirect(
             `/schedule/${params.conventId}/${params.scheduleDate}`
           );
@@ -187,6 +198,7 @@ export default function Session() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       publishers,
+      participants: session.participants
     },
   });
 
@@ -394,7 +406,25 @@ export default function Session() {
               )}
             />
           </div>
-
+          <div>
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="participants"
+            >
+              Medverkande
+            </label>
+            <input
+              {...register("participants")}
+              className={classNames(
+                `shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`,
+            
+              )}
+              id="participants"
+              name="participants"
+              type="text"
+              placeholder="Medverkande"
+            />
+          </div>
           <div className="flex items-end justify-end">
             <button
               onClick={handlePublishersSubmit}

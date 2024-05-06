@@ -88,6 +88,7 @@ const PodiumPraticeStep = ({ session }: { session: Session }) => {
             <span className="pl-1 mt-0.5 text-xs">({identifier})</span>
           </div>
           <div className="flex">{theme}</div>
+          {participants ?  <p className="text-sm text-gray-500">Medverkande: {participants}</p>: null}
           <p className="text-sm text-gray-500">{`${day}, ${renderTime(
             startHour,
             startMinutes
@@ -186,6 +187,7 @@ const SearchResultItem = (props: Session) => {
     startMinutes,
     steps,
     identifier,
+    participants,
     publishers,
   } = props;
   const [detail, showDetail] = useState(false);
@@ -304,6 +306,7 @@ const SearchResultItem = (props: Session) => {
           )}
 
           <p className="text-gray-600">{theme}</p>
+          {participants ?  <p className="text-sm text-gray-600">Medverkande: {participants}</p> : null}
           <p className="text-sm text-gray-500">{`${day}, ${renderTime(
             startHour,
             startMinutes
