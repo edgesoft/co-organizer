@@ -8,8 +8,7 @@ import {
 import {
   useFetcher,
   useLoaderData,
-  useNavigate,
-  useRevalidator,
+  useNavigate
 } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import {
@@ -21,8 +20,13 @@ import StepItem from "./stepItem";
 import { useEventSource } from "remix-utils/sse/react";
 import { useUpdateSessionStepEvent } from "~/hooks/useUpdateSessionStepEvent";
 import { classNames } from "~/utils/classnames";
+import { ConventLoaderType, SessionProps } from "~/types/types";
 
-const PodiumPraticeStep = ({ session }: { session: Session }) => {
+const PodiumPraticeStep = ({
+  session
+}: {
+  session: SessionProps;
+}) => {
   const [currentSteps, setCurrentSteps] = useState<SessionStep[]>([]);
   const {
     identifier,
@@ -59,7 +63,12 @@ const PodiumPraticeStep = ({ session }: { session: Session }) => {
   }, [id, steps]);
 
   return (
-    <div key={id} className="text-sm bg-white p-2 rounded-md shadow-md mb-2">
+    <div
+      key={id}
+      className="relative text-sm bg-white p-2 rounded-md shadow-md mb-2"
+    >
+      
+
       <div className="flex flex-row items-center">
         <div
           style={{ height: 60, minWidth: 6 }}
@@ -88,7 +97,9 @@ const PodiumPraticeStep = ({ session }: { session: Session }) => {
             <span className="pl-1 mt-0.5 text-xs">({identifier})</span>
           </div>
           <div className="flex">{theme}</div>
-          {participants ?  <p className="text-sm text-gray-500">Medverkande: {participants}</p>: null}
+          {participants ? (
+            <p className="text-sm text-gray-500">Medverkande: {participants}</p>
+          ) : null}
           <p className="text-sm text-gray-500">{`${day}, ${renderTime(
             startHour,
             startMinutes
@@ -116,11 +127,18 @@ const PodiumPraticeStep = ({ session }: { session: Session }) => {
     </div>
   );
 };
-const PodiumPraticeComponent = ({ sessions }: { sessions: Session[] }) => {
+
+
+const PodiumPraticeComponent = ({  sessions }: {  sessions: SessionProps[] }) => {
   if (!sessions) return null;
 
   return sessions.map((session) => {
-    return <PodiumPraticeStep key={session.id} session={session} />;
+    return (
+      <PodiumPraticeStep
+        key={session.id}
+        session={session}
+      />
+    );
   });
 };
 
@@ -218,9 +236,11 @@ const SearchResultItem = (props: Session) => {
     }
 
     if (stepType !== StepType.RECEIVED_ASSIGNMENT) {
-      const ra = currentSteps.find((c) => c.stepType === StepType.RECEIVED_ASSIGNMENT)
+      const ra = currentSteps.find(
+        (c) => c.stepType === StepType.RECEIVED_ASSIGNMENT
+      );
       if (ra && !ra.isCompleted) {
-        return false
+        return false;
       }
     }
 
@@ -306,21 +326,23 @@ const SearchResultItem = (props: Session) => {
           )}
 
           <p className="text-gray-600">{theme}</p>
-          {participants ?  <p className="text-sm text-gray-600">Medverkande: {participants}</p> : null}
+          {participants ? (
+            <p className="text-sm text-gray-600">Medverkande: {participants}</p>
+          ) : null}
           <p className="text-sm text-gray-500">{`${day}, ${renderTime(
             startHour,
             startMinutes
           )} - ${renderTime(stopHour, stopMinutes)}`}</p>
           {user.role === Role.ADMIN && type !== SessionType.VIDEO ? (
             <button
-              className="mt-1 rounded-md shadow-md bg-red-700 text-white px-2 py-1 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 text-sm"
+              className="mt-1 rounded-md shadow-md bg-blue-700 text-white px-2 py-1 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                navigate(`./session/${id}/delete`);
+                navigate(`./session/${id}/edit`);
               }}
             >
-              Ta bort
+              Ändra
             </button>
           ) : null}
         </div>
@@ -328,7 +350,7 @@ const SearchResultItem = (props: Session) => {
       {detail && (
         <div className="p-2">
           {type === SessionType.PODIUM_PRACTICE && (
-            <PodiumPraticeComponent sessions={sessions} />
+            <PodiumPraticeComponent  sessions={sessions} />
           )}
 
           {(user.role === Role.ADMIN || user.role === Role.WORKER) &&
