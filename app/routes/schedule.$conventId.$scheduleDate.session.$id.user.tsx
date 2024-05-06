@@ -37,7 +37,7 @@ interface GroupType {
 
 const formSchema = z.object({
   action: z.string().min(1),
-  participants: z.string().optional(),
+  participants: z.string().nullable().optional(),
   publishers: z
     .array(
       z.object({
