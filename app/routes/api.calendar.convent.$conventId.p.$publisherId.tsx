@@ -48,7 +48,7 @@ export const loader: LoaderFunction = async ({ params }) => {
               description: publisherNames ? `Ansvariga: ${publisherNames}`: "",
               timezone: 'Europe/Stockholm'
           });
-          event.uid(`convent-${conventId}-${publisherId}`);
+          event.uid(`convent-${conventId}-${publisherId}-${id}`);
         }
     }
 
