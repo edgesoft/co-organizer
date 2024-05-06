@@ -14,10 +14,10 @@ import {
   pixelsPerMinute,
   renderTime,
 } from "~/utils/helpers";
-import { Session, SessionStep, SessionType } from "@prisma/client";
+import { Publisher, Session, SessionStep, SessionType } from "@prisma/client";
 import { prisma } from "../services/db.server";
 import { Outlet, useLoaderData, useNavigate } from "@remix-run/react";
-import { PositionType } from "~/types/types";
+import { ConventLoaderType, PositionType, SessionProps } from "~/types/types";
 import Header from "~/components/header";
 import { LoaderFunction, MetaFunction, json, redirect } from "@remix-run/node";
 import { verifyUserSession } from "~/services/cookie.server";
@@ -125,9 +125,13 @@ export const loader: LoaderFunction = async ({request, params}) => {
     return redirect("/events")
   }
 
+  
   if (params.scheduleDate?.length !== 8) {
     const {date} = getDatesForSchedule(convent.startDate)
     scheduleDate = date
+
+
+    
     return redirect(`/schedule/${convent.id}/${date}`)
   } else {
     let s = parseInt(scheduleDate || "", 10);
@@ -152,8 +156,9 @@ export const loader: LoaderFunction = async ({request, params}) => {
   return json({sessions, convent, currentDate: date, user, env: process.env.CO_ENV})
 };
 
-const SessionComponent = (props: Session) => {
-  const { id, startHour, startMinutes, stopHour, stopMinutes, type } = props;
+const SessionComponent = (props: SessionProps) => {
+
+  const { id, startHour, startMinutes, stopHour, stopMinutes, type, publishers } = props;
   const minutes = calculateMinutes(
     startHour,
     startMinutes,
@@ -227,6 +232,7 @@ const SessionComponent = (props: Session) => {
   }, [updateTextPosition]);
 
   const topPosition = textHeight > 0 ? textHeight : 0;
+  const name = publishers && publishers.length ? publishers.map((p) => p.publisher.name).join(",") : ""
 
   return (
     <div
@@ -277,7 +283,8 @@ const SessionComponent = (props: Session) => {
                 ({renderTime(startHour, startMinutes)}-
                 {renderTime(stopHour, stopMinutes)})
               </span>
-              {formatName(props.name || "")}
+              <span className="text-sm pr-1"> {formatName(name)}</span>
+             
             </span>
           </div>
         </div>
@@ -354,7 +361,7 @@ const renderTimeInterval = (hour: number, index: number) => {
 
 
 const ColumnLayout = () => {
-  const { sessions, convent, user, env } = useLoaderData();
+  const { sessions, user, env } = useLoaderData<ConventLoaderType>();
   const navigator = useNavigate()
   useAuthRevalidation(env)
   useSessionStepRevalidator()
@@ -414,7 +421,7 @@ const ColumnLayout = () => {
                     minHeight: `${maxTimeInPixels}px`,
                   }}
                 >
-                  {sessions.map((e: Session, index: number) => {
+                  {sessions.map((e: Session, index: number): JSX.Element | null => {
                     const layer = getLayerBySessionType(e.type);
                     const eventStartInMinutes =
                       e.startHour * 60 + e.startMinutes;
