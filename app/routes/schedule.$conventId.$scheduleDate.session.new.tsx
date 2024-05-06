@@ -86,7 +86,7 @@ const sessionTypeOptions = [
 
 const stepTypeOptions = [
   { value: StepType.RECEIVED_ASSIGNMENT, label: "Talaruppdraget godkänt" },
-  { value: StepType.PRACTICE_DONE, label: "Övning gjord" },
+  { value: StepType.PRACTICE_DONE, label: "Övning medverkande gjord" },
   { value: StepType.PODIUM_PRACTICE_DONE, label: "Podieövning gjord" },
   { value: StepType.REGISTERED_ON_FIRST_DAY, label: "Anmäld första dagen" },
   { value: StepType.REGISTERED_ON_SPEAKING_DAY, label: "Anmäld dagen för tal" },
