@@ -98,6 +98,7 @@ const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
         <div className="ml-auto">
           {practiceStep && names && names.length ? (
             <StepItem
+            isGroup={true}
               step={practiceStep}
               disabled={false}
               onEvent={(id, on) => {
@@ -175,6 +176,54 @@ const useProgressSteps = (session: Session, steps: SessionStep[]) => {
     completedProgress,
     fetcher.data && fetcher.data.sessions ? fetcher.data.sessions : [],
   ];
+};
+
+
+const PracticeComponent = (session: Session) => {
+  const { groupSessionId, id, type } = session;
+  const fetcher = useFetcher();
+ 
+  useEffect(() => {
+    if (groupSessionId) {
+      try {
+        fetcher.submit(
+          { groupSessionId: groupSessionId },
+          {
+            action: "/api/practice",
+            method: "post",
+            encType: "application/json",
+          }
+        );
+      } catch (e) {}
+    }
+  }, []);
+
+
+
+  if (!groupSessionId) return null;
+
+  if (
+    fetcher &&
+    fetcher.data &&
+    fetcher.data.type === SessionType.PODIUM_PRACTICE
+  ) {
+    const day = capitalizeFirstLetter(
+      new Date(fetcher.data.date).toLocaleDateString("sv-SE", {
+        weekday: "long",
+      })
+    );
+    return (
+      <div className="text-sm text-gray-500 mb-2">
+        Podieträning {day},{" "}
+        {renderTime(fetcher.data.startHour, fetcher.data.startMinutes)} -{" "}
+        {renderTime(fetcher.data.stopHour, fetcher.data.stopMinutes)}
+      </div>
+    );
+  }
+
+  return null
+
+
 };
 
 const SearchResultItem = (props: Session) => {
@@ -322,6 +371,7 @@ const SearchResultItem = (props: Session) => {
             startHour,
             startMinutes
           )} - ${renderTime(stopHour, stopMinutes)}`}</p>
+
           {user.role === Role.ADMIN && type !== SessionType.VIDEO ? (
             <button
               className="mt-1 rounded-md shadow-md bg-blue-700 text-white px-2 py-1 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
@@ -337,9 +387,11 @@ const SearchResultItem = (props: Session) => {
         </div>
       </div>
       {detail && (
-        <div className="p-2">
-          {type === SessionType.PODIUM_PRACTICE && (
+        <div className="p-4">
+          {type === SessionType.PODIUM_PRACTICE ? (
             <PodiumPraticeComponent sessions={sessions} />
+          ) : (
+            <PracticeComponent {...props} />
           )}
 
           {(user.role === Role.ADMIN || user.role === Role.WORKER) &&
@@ -347,6 +399,7 @@ const SearchResultItem = (props: Session) => {
               return (
                 <div key={index}>
                   <StepItem
+                  isGroup={false}
                     step={step}
                     disabled={!isStepEnabled(step.stepType)}
                     onEvent={(id, on) => {
