@@ -5,11 +5,7 @@ import {
   SessionType,
   StepType,
 } from "@prisma/client";
-import {
-  useFetcher,
-  useLoaderData,
-  useNavigate
-} from "@remix-run/react";
+import { useFetcher, useLoaderData, useNavigate } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import {
   capitalizeFirstLetter,
@@ -22,11 +18,7 @@ import { useUpdateSessionStepEvent } from "~/hooks/useUpdateSessionStepEvent";
 import { classNames } from "~/utils/classnames";
 import { ConventLoaderType, SessionProps } from "~/types/types";
 
-const PodiumPraticeStep = ({
-  session
-}: {
-  session: SessionProps;
-}) => {
+const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
   const [currentSteps, setCurrentSteps] = useState<SessionStep[]>([]);
   const {
     identifier,
@@ -67,8 +59,6 @@ const PodiumPraticeStep = ({
       key={id}
       className="relative text-sm bg-white p-2 rounded-md shadow-md mb-2"
     >
-      
-
       <div className="flex flex-row items-center">
         <div
           style={{ height: 60, minWidth: 6 }}
@@ -128,17 +118,11 @@ const PodiumPraticeStep = ({
   );
 };
 
-
-const PodiumPraticeComponent = ({  sessions }: {  sessions: SessionProps[] }) => {
+const PodiumPraticeComponent = ({ sessions }: { sessions: SessionProps[] }) => {
   if (!sessions) return null;
 
   return sessions.map((session) => {
-    return (
-      <PodiumPraticeStep
-        key={session.id}
-        session={session}
-      />
-    );
+    return <PodiumPraticeStep key={session.id} session={session} />;
   });
 };
 
@@ -247,6 +231,16 @@ const SearchResultItem = (props: Session) => {
     return true;
   };
 
+  const isAssignedStyle = () => {
+    if (type == SessionType.VIDEO) return true;
+    if (completedProgress === 0 && type !== SessionType.PODIUM_PRACTICE) {
+      return false;
+    }
+    if (publishers.length && publishers.length > 0) return true;
+
+    return false;
+  };
+
   return (
     <div className={`border-b last:border-b-0  ${detail ? "bg-gray-50" : ""}`}>
       <div
@@ -302,12 +296,7 @@ const SearchResultItem = (props: Session) => {
                     : {}
                 }
                 className={classNames(
-                  (publishers.length &&
-                    publishers.length > 0 &&
-                    completedProgress > 0) ||
-                    type == SessionType.VIDEO
-                    ? ""
-                    : "text-red-700",
+                  isAssignedStyle() ? "" : "text-red-700",
                   "font-semibold text-lg"
                 )}
               >
@@ -350,7 +339,7 @@ const SearchResultItem = (props: Session) => {
       {detail && (
         <div className="p-2">
           {type === SessionType.PODIUM_PRACTICE && (
-            <PodiumPraticeComponent  sessions={sessions} />
+            <PodiumPraticeComponent sessions={sessions} />
           )}
 
           {(user.role === Role.ADMIN || user.role === Role.WORKER) &&
