@@ -1,4 +1,8 @@
-import { redirect, type LoaderFunction, type MetaFunction } from "@remix-run/node";
+import {
+  redirect,
+  type LoaderFunction,
+  type MetaFunction,
+} from "@remix-run/node";
 import { auth, db } from "../services/fb";
 import {
   RecaptchaVerifier,
@@ -10,7 +14,7 @@ import { useFetcher } from "react-router-dom";
 import { Bounce, toast } from "react-toastify";
 import { verifyUserSession } from "~/services/cookie.server";
 import { useLoaderData } from "@remix-run/react";
-
+import { classNames } from "~/utils/classnames";
 
 export function Icon() {
   return (
@@ -96,22 +100,22 @@ export let meta: MetaFunction = (d) => {
     },
   ];
 };
-export const loader: LoaderFunction = async ({request}) => {
-  const {user} = await verifyUserSession(request)
+export const loader: LoaderFunction = async ({ request }) => {
+  const { user } = await verifyUserSession(request);
   if (user) {
-    return redirect("/events")
+    return redirect("/events");
   }
 
-  return {env: process.env.CO_ENV}
+  return { env: process.env.CO_ENV };
 };
 
 const showError = (error: string) => {
   // remove error that is not error
-  if (error.toLocaleLowerCase().includes("recaptcha client element") ) return
+  if (error.toLocaleLowerCase().includes("recaptcha client element")) return;
   toast.error(error, {
     className: "md:p-2",
     position: "top-left",
-    closeButton: true, 
+    closeButton: true,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: true,
@@ -124,56 +128,55 @@ const showError = (error: string) => {
 };
 
 type LoaderProps = {
-  env: string
-}
-
+  env: string;
+};
 
 function isValidPartialNumber(input: string) {
   // Tillåter +46 följt av 7 (Sverige), +47 följt av 4 eller 9 (Norge), eller +45 (Danmark)
-  if (input.startsWith('+')) {
+  if (input.startsWith("+")) {
     if (input.length === 1) return true; // Tillåter "+"
-    if (input.length === 2) return input === '+4';
-    if (input.length === 3) return input === '+46' || input === '+47' || input === '+45';
-    if (input.startsWith('+46') && input.length === 4) return input[3] === '7'; // Efter "+46" måste en "7" följa
-    if (input.startsWith('+47') && input.length === 4) return input[3] === '4' || input[3] === '9'; // Efter "+47" måste en "4" eller "9" följa
-    if (input.startsWith('+467')) return /^(\+467\d{0,8})$/.test(input); // Svenska mobilnummer efter +467
-    if (input.startsWith('+474') || input.startsWith('+479')) return /^(\+47[49]\d{0,7})$/.test(input); // Norska mobilnummer efter +474 eller +479
-    if (input.startsWith('+45')) return /^(\+45\d{0,8})$/.test(input); // Danska mobilnummer efter +45
-  } 
-  else if (input.startsWith('0')) {
+    if (input.length === 2) return input === "+4";
+    if (input.length === 3)
+      return input === "+46" || input === "+47" || input === "+45";
+    if (input.startsWith("+46") && input.length === 4) return input[3] === "7"; // Efter "+46" måste en "7" följa
+    if (input.startsWith("+47") && input.length === 4)
+      return input[3] === "4" || input[3] === "9"; // Efter "+47" måste en "4" eller "9" följa
+    if (input.startsWith("+467")) return /^(\+467\d{0,8})$/.test(input); // Svenska mobilnummer efter +467
+    if (input.startsWith("+474") || input.startsWith("+479"))
+      return /^(\+47[49]\d{0,7})$/.test(input); // Norska mobilnummer efter +474 eller +479
+    if (input.startsWith("+45")) return /^(\+45\d{0,8})$/.test(input); // Danska mobilnummer efter +45
+  } else if (input.startsWith("0")) {
     if (input.length === 1) return true; // Tillåter "0" för svenska nummer
-    if (input.length === 2) return input === '07'; // Svenska nationella nummer börjar med "07"
+    if (input.length === 2) return input === "07"; // Svenska nationella nummer börjar med "07"
     return /^(07\d{0,8})$/.test(input); // Svenska nationella mobilnummer
   }
   return false; // Om inget matchar
 }
 
 export default function Index() {
-  const {env} = useLoaderData<LoaderProps>()
+  const { env } = useLoaderData<LoaderProps>();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const fetcher = useFetcher();
   const [showVerificationInput, setShowVerificationInput] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [appVerifier, setAppVerifier] = useState(null);
-  const phoneNumberRegex = /^(\+467\d{8}|07\d{8}|\+474\d{7}|\+479\d{7}|\+45\d{8})$/;
+  const phoneNumberRegex =
+    /^(\+467\d{8}|07\d{8}|\+474\d{7}|\+479\d{7}|\+45\d{8})$/;
 
   const [revalidate, setRevalidate] = useState(false);
-  const [progress, setProgress] = useState({start: 0, stop: 100})
+  const [progress, setProgress] = useState({ start: 0, stop: 100 });
 
-
-const [firebaseProcess, setFirebaseProcess] = useState(false);
+  const [firebaseProcess, setFirebaseProcess] = useState(false);
 
   useEffect(() => {
     const isDone = fetcher.state === "idle" && fetcher.data != null;
     const fetchData = async () => {
       if (isDone) {
-
         if (env === "development") {
           setTimeout(() => {
             setShowVerificationInput(true);
-          }, 3000)
-    
+          }, 3000);
         } else {
           try {
             let verifier = null;
@@ -186,34 +189,32 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
             } else {
               verifier = appVerifier;
             }
-            let phone = phoneNumber
+            let phone = phoneNumber;
             if (!phoneNumber.toString().startsWith("+46")) {
-              phone = `+46${phoneNumber.toString().substring(1,10)}`
+              phone = `+46${phoneNumber.toString().substring(1, 10)}`;
             }
-        
+
             const confirmationResult = await signInWithPhoneNumber(
               auth,
               phone,
               verifier
             );
-  
+
             setConfirmationResult(confirmationResult);
             setShowVerificationInput(true);
           } catch (e) {
             setRevalidate(false);
-            setFirebaseProcess(false)
+            setFirebaseProcess(false);
             showError(e.message);
           }
         }
-
-       
       }
     };
 
     if (isDone && revalidate) {
       if (fetcher.data.error) {
         setRevalidate(false);
-        setFirebaseProcess(false)
+        setFirebaseProcess(false);
         showError(fetcher.data.error);
       } else {
         fetchData();
@@ -221,20 +222,20 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
     }
   }, [revalidate, phoneNumber, fetcher, fetcher.state]);
 
-  useEffect(() => { 
-    let timer: NodeJS.Timeout | number | undefined = undefined 
-    let p = 0
+  useEffect(() => {
+    let timer: NodeJS.Timeout | number | undefined = undefined;
+    let p = 0;
     if (!showVerificationInput && firebaseProcess) {
       timer = setInterval(() => {
-        p = p + 2
-        setProgress({start: p, stop: progress.stop})
-      }, 100)
+        p = p + 2;
+        setProgress({ start: p, stop: progress.stop });
+      }, 100);
     }
 
     return () => {
-      clearInterval(timer)
-    }
-  }, [firebaseProcess, showVerificationInput])
+      clearInterval(timer);
+    };
+  }, [firebaseProcess, showVerificationInput]);
 
   const isValidPhoneNumber = (phoneNumber: string) => {
     return phoneNumberRegex.test(phoneNumber);
@@ -252,7 +253,7 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
   const isValid = isValidPhoneNumber(phoneNumber);
 
   const loginWithSMS = async () => {
-    setFirebaseProcess(true)
+    setFirebaseProcess(true);
     await fetcher.submit(
       { phoneNumber: phoneNumber },
       { action: "/token", method: "post" }
@@ -262,7 +263,6 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
   };
 
   const handleVerificationSubmit = async () => {
-
     if (env === "development") {
       await fetcher.submit(
         { phoneNumber: phoneNumber, idToken: phoneNumber },
@@ -287,12 +287,12 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
         const credential = await confirmationResult.confirm(verificationCode);
         const user = credential.user;
         const idToken = await getIdToken(user);
-  
+
         fetcher.submit(
           { phoneNumber: user.phoneNumber, idToken },
           { action: "/token", method: "post" }
         );
-  
+
         toast.success(`Loggade in ${user.phoneNumber}`, {
           className: "md:p-2",
           position: "top-left",
@@ -307,14 +307,11 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
           transition: Bounce,
         });
       } catch (error) {
-        setFirebaseProcess(false)
+        setFirebaseProcess(false);
         setRevalidate(false);
         showError(error.message);
       }
     }
-
-
-   
   };
 
   return (
@@ -324,13 +321,25 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
           <Icon />
         </div>
       </header>
-      <div className={`relative p-8 bg-white rounded-lg shadow-xl w-96 border-slate-900`}>
-        {firebaseProcess && !showVerificationInput ? 
-        <div className="absolute bg-slate-300 rounded-t-lg" style={{height: 15, width: 'calc(100%)', left: 0, top: 0}}>
-          <div className={`bg-teal-400 rounded-tl-lg ${progress.start === 100 ? "rounded-tr-lg" : ""}`} style={{width: `${(progress.start / progress.stop) * 100}%`, height: 15}}></div>
-
-        </div>
-        : null}
+      <div
+        className={`relative p-8 bg-white rounded-lg shadow-xl w-96 border-slate-900`}
+      >
+        {firebaseProcess && !showVerificationInput ? (
+          <div
+            className="absolute bg-slate-300 rounded-t-lg"
+            style={{ height: 15, width: "calc(100%)", left: 0, top: 0 }}
+          >
+            <div
+              className={`bg-teal-400 rounded-tl-lg ${
+                progress.start === 100 ? "rounded-tr-lg" : ""
+              }`}
+              style={{
+                width: `${(progress.start / progress.stop) * 100}%`,
+                height: 15,
+              }}
+            ></div>
+          </div>
+        ) : null}
         <h1 className="text-3xl font-bold text-center text-slate-700 mb-6">
           Logga in
         </h1>
@@ -361,20 +370,22 @@ const [firebaseProcess, setFirebaseProcess] = useState(false);
                 placeholder="Mobiltelefon"
                 value={phoneNumber}
                 onChange={(e) => {
-                  const value = e.target.value
-                  if (value === '' || isValidPartialNumber(value)) {
+                  const value = e.target.value;
+                  if (value === "" || isValidPartialNumber(value)) {
                     handlePhoneNumberChange(e); // Antaget att denna funktion hanterar uppdateringen av telefonnummer tillståndet
                   }
                 }}
-                disabled={revalidate}
+                disabled={revalidate || fetcher.state === "submitting"}
                 className={`w-full px-3 py-2 border rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200`}
               />
             )}
           </div>
           <button
-            className={`w-full py-2 px-4 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition duration-200 ${
-              !isValid ? "bg-slate-300" : "bg-slate-700 hover:bg-slate-900"
-            }`}
+            className={classNames(
+              "w-full py-2 px-4 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition duration-200",
+              !isValid ? "bg-slate-300" : "bg-slate-700 hover:bg-slate-900",
+              fetcher.state === "submitting" ? "bg-slate-300" : "bg-slate-700"
+            )}
           >
             Logga in
           </button>
