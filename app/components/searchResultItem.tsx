@@ -98,7 +98,7 @@ const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
         <div className="ml-auto">
           {practiceStep && names && names.length ? (
             <StepItem
-            isGroup={true}
+              isGroup={true}
               step={practiceStep}
               disabled={false}
               onEvent={(id, on) => {
@@ -179,53 +179,6 @@ const useProgressSteps = (session: Session, steps: SessionStep[]) => {
 };
 
 
-const PracticeComponent = (session: Session) => {
-  const { groupSessionId, id, type } = session;
-  const fetcher = useFetcher();
- 
-  useEffect(() => {
-    if (groupSessionId) {
-      try {
-        fetcher.submit(
-          { groupSessionId: groupSessionId },
-          {
-            action: "/api/practice",
-            method: "post",
-            encType: "application/json",
-          }
-        );
-      } catch (e) {}
-    }
-  }, []);
-
-
-
-  if (!groupSessionId) return null;
-
-  if (
-    fetcher &&
-    fetcher.data &&
-    fetcher.data.type === SessionType.PODIUM_PRACTICE
-  ) {
-    const day = capitalizeFirstLetter(
-      new Date(fetcher.data.date).toLocaleDateString("sv-SE", {
-        weekday: "long",
-      })
-    );
-    return (
-      <div className="text-sm text-gray-500 mb-2">
-        Podieträning {day},{" "}
-        {renderTime(fetcher.data.startHour, fetcher.data.startMinutes)} -{" "}
-        {renderTime(fetcher.data.stopHour, fetcher.data.stopMinutes)}
-      </div>
-    );
-  }
-
-  return null
-
-
-};
-
 const SearchResultItem = (props: Session) => {
   const {
     id,
@@ -293,9 +246,22 @@ const SearchResultItem = (props: Session) => {
   return (
     <div className={`border-b last:border-b-0  ${detail ? "bg-gray-50" : ""}`}>
       <div
-        className={`p-4 flex cursor-pointer`}
+        className={classNames(
+          `p-4 flex`,
+          type === SessionType.VIDEO ||
+            type === SessionType.MUSIC ||
+            type === SessionType.CHAIR_MAN_ROOM ||
+            type === SessionType.CHECKING_SPEAKERS
+            ? "cursor-normal"
+            : "cursor-pointer"
+        )}
         onClick={() => {
-          if (type === SessionType.VIDEO || type === SessionType.MUSIC)
+          if (
+            type === SessionType.VIDEO ||
+            type === SessionType.MUSIC ||
+            type === SessionType.CHAIR_MAN_ROOM ||
+            type === SessionType.CHECKING_SPEAKERS
+          )
             return false;
           if (user.role === Role.PROGRAM) {
             if (type === SessionType.PODIUM_PRACTICE) {
@@ -388,34 +354,34 @@ const SearchResultItem = (props: Session) => {
       </div>
       {detail && (
         <div className="p-4">
-          {type === SessionType.PODIUM_PRACTICE ? (
+          {type === SessionType.PODIUM_PRACTICE && (
             <PodiumPraticeComponent sessions={sessions} />
-          ) : (
-            <PracticeComponent {...props} />
           )}
 
           {(user.role === Role.ADMIN || user.role === Role.WORKER) &&
-            currentSteps.map((step, index) => {
-              return (
-                <div key={index}>
-                  <StepItem
-                  isGroup={false}
-                    step={step}
-                    disabled={!isStepEnabled(step.stepType)}
-                    onEvent={(id, on) => {
-                      setCurrentSteps(
-                        currentSteps.map((s) => {
-                          return {
-                            ...s,
-                            isCompleted: s.id === id ? on : s.isCompleted,
-                          };
-                        })
-                      );
-                    }}
-                  />
-                </div>
-              );
-            })}
+            currentSteps
+              .sort((a, b) => a.id - b.id)
+              .map((step, index) => {
+                return (
+                  <div key={index}>
+                    <StepItem
+                      isGroup={false}
+                      step={step}
+                      disabled={!isStepEnabled(step.stepType)}
+                      onEvent={(id, on) => {
+                        setCurrentSteps(
+                          currentSteps.map((s) => {
+                            return {
+                              ...s,
+                              isCompleted: s.id === id ? on : s.isCompleted,
+                            };
+                          })
+                        );
+                      }}
+                    />
+                  </div>
+                );
+              })}
         </div>
       )}
     </div>

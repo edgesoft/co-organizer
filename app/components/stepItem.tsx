@@ -50,7 +50,7 @@ const StepName = ({ id, stepType, isGroup }: { id: number; stepType: StepType, i
     );
   }
 
-  return null;
+  return getStepTypeName(stepType);
 };
 
 const StepItem: React.FC<StepProps> = ({
