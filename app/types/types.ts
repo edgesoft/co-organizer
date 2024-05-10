@@ -5,6 +5,7 @@ export type PositionType = "absolute" | "relative" | "fixed" | "sticky";
 export type StepProps = {
   step: SessionStep;
   disabled: boolean;
+  isGroup: boolean;
   onEvent: (id: number, isCompleted: boolean) => void;
 };
 
