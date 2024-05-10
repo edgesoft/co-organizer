@@ -106,10 +106,12 @@ export const loader: LoaderFunction = async ({request}) => {
 };
 
 const showError = (error: string) => {
+  // remove error that is not error
+  if (error.toLocaleLowerCase().includes("recaptcha client element") ) return
   toast.error(error, {
     className: "md:p-2",
     position: "top-left",
-    closeButton: true, // Ändrat till true för att visa stängknappen
+    closeButton: true, 
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: true,
