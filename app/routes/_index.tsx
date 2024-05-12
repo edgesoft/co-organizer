@@ -3,7 +3,7 @@ import {
   type LoaderFunction,
   type MetaFunction,
 } from "@remix-run/node";
-import { auth, db } from "../services/fb";
+import { auth } from "../services/fb";
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -163,10 +163,10 @@ export default function Index() {
   const [appVerifier, setAppVerifier] = useState(null);
   const phoneNumberRegex =
     /^(\+467\d{8}|07\d{8}|\+474\d{7}|\+479\d{7}|\+45\d{8})$/;
-
   const [revalidate, setRevalidate] = useState(false);
   const [progress, setProgress] = useState({ start: 0, stop: 100 });
 
+  const [SMSProgress, setSMSProgress] = useState({ start: 0, stop: 100 });
   const [firebaseProcess, setFirebaseProcess] = useState(false);
 
   useEffect(() => {
@@ -237,6 +237,24 @@ export default function Index() {
     };
   }, [firebaseProcess, showVerificationInput]);
 
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | number | undefined = undefined;
+    let p = 0;
+    if (SMSProgress.start > 0) {
+      timer = setInterval(() => {
+        p = p + 2;
+        if (p + SMSProgress.start < 100) 
+        setSMSProgress({ start: p + SMSProgress.start, stop: 100 });
+      }, 100);
+    }
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [SMSProgress.start]);
+
+
   const isValidPhoneNumber = (phoneNumber: string) => {
     return phoneNumberRegex.test(phoneNumber);
   };
@@ -264,26 +282,31 @@ export default function Index() {
 
   const handleVerificationSubmit = async () => {
     if (env === "development") {
-      await fetcher.submit(
-        { phoneNumber: phoneNumber, idToken: phoneNumber },
-        { action: "/token", method: "post" }
-      );
 
-      toast.success(`Loggade in ${phoneNumber}`, {
-        className: "md:p-2",
-        position: "top-left",
-        closeButton: true,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        autoClose: 2000,
-        theme: "light",
-        transition: Bounce,
-      });
+      setSMSProgress({start: 1, stop: 100})
+      setTimeout(async () => {
+        await fetcher.submit(
+          { phoneNumber: phoneNumber, idToken: phoneNumber },
+          { action: "/token", method: "post" }
+        );
+        toast.success(`Loggade in ${phoneNumber}`, {
+          className: "md:p-2",
+          position: "top-left",
+          closeButton: true,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          autoClose: 2000,
+          theme: "light",
+          transition: Bounce,
+        });
+      }, 5000)
+     
     } else {
       try {
+        setSMSProgress({start: 1, stop: 100})
         const credential = await confirmationResult.confirm(verificationCode);
         const user = credential.user;
         const idToken = await getIdToken(user);
@@ -307,6 +330,7 @@ export default function Index() {
           transition: Bounce,
         });
       } catch (error) {
+        setSMSProgress({start: 0, stop: 100})
         setFirebaseProcess(false);
         setRevalidate(false);
         showError(error.message);
@@ -340,6 +364,21 @@ export default function Index() {
             ></div>
           </div>
         ) : null}
+        {SMSProgress.start > 0 ? <div
+            className="absolute bg-slate-300 rounded-t-lg"
+            style={{ height: 15, width: "calc(100%)", left: 0, top: 0 }}
+          >
+            <div
+              className={`bg-teal-400 rounded-tl-lg ${
+                SMSProgress.start === 100 ? "rounded-tr-lg" : ""
+              }`}
+              style={{
+                width: `${(SMSProgress.start / SMSProgress.stop) * 100}%`,
+                height: 15,
+              }}
+            ></div>
+          </div>: null}
+
         <h1 className="text-3xl font-bold text-center text-slate-700 mb-6">
           Logga in
         </h1>
@@ -372,7 +411,7 @@ export default function Index() {
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === "" || isValidPartialNumber(value)) {
-                    handlePhoneNumberChange(e); // Antaget att denna funktion hanterar uppdateringen av telefonnummer tillståndet
+                    handlePhoneNumberChange(e); 
                   }
                 }}
                 disabled={revalidate || fetcher.state === "submitting"}
