@@ -178,7 +178,6 @@ const useProgressSteps = (session: Session, steps: SessionStep[]) => {
   ];
 };
 
-
 const SearchResultItem = (props: Session) => {
   const {
     id,
@@ -325,10 +324,26 @@ const SearchResultItem = (props: Session) => {
                   ? "Video"
                   : "Inte tilldelat"}
               </h3>
+
               <span className="pl-1 mt-1 text-sm">({identifier})</span>
             </div>
           )}
-
+          {type === SessionType.PRAYER || type === SessionType.TALK ? (
+            <h2 className="flex text-sm">
+              {publishers.length && publishers.length > 0
+                ? publishers
+                    .map(
+                      (p: {
+                        publisher: { congregation: string; circuit: string };
+                      }) =>
+                        p.publisher.congregation
+                          ? `${p.publisher.congregation}(${p.publisher.circuit})`
+                          : p.publisher.circuit
+                    )
+                    .join(", ")
+                : null}
+            </h2>
+          ) : null}
           <p className="text-gray-600">{theme}</p>
           {participants ? (
             <p className="text-sm text-gray-600">Medverkande: {participants}</p>
