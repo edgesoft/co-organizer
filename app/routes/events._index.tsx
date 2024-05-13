@@ -36,7 +36,40 @@ export const loader: LoaderFunction = async ({ request }) => {
   if (!user) {
     return redirect("/");
   }
-  const events = await prisma.convent.findMany({});
+
+  const userConvents = await prisma.user.findUnique({
+    where: {
+      id: user.id,
+    },
+    select: {
+      userConvents: {
+        select: {
+          convent: true,
+        },
+      },
+    },
+  });
+  
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let events = userConvents?.userConvents.map(userConvent => userConvent.convent) || [];
+
+  // Filtrera bort event som har passerat för icke-ADMIN-användare
+  if (user.role !== 'ADMIN') {
+    events = events.filter(event => {
+      const endDate = new Date(event.endDate);
+      endDate.setHours(0, 0, 0, 0);
+      return endDate >= today;
+    });
+  }
+
+
+  if (events.length === 0) {
+    return redirect("/logout");
+  }
+
   return json({ events, user, env: process.env.CO_ENV });
 };
 

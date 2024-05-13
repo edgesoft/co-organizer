@@ -28,7 +28,7 @@ const { throttle } = pkg;
 
 async function getSessionForDate(date: string, id: number) {
   const startDate = new Date(date);
-  startDate.setHours(0, 0, 0, 0); 
+  startDate.setHours(0, 0, 0, 0);
 
   const endDate = new Date(date);
   endDate.setHours(23, 59, 59, 999);
@@ -43,9 +43,9 @@ async function getSessionForDate(date: string, id: number) {
     },
     include: {
       steps: true,
-      publishers: { 
+      publishers: {
         include: {
-          publisher: true
+          publisher: true,
         },
       },
     },
@@ -64,28 +64,37 @@ function isSameOrBefore(startDate: Date, endDate: Date, dateToCheck: Date) {
   let checkMonth = dateToCheck.getMonth();
   let checkDay = dateToCheck.getDate();
 
-  if (checkYear < startYear || (checkYear === startYear && checkMonth < startMonth) ||
-      (checkYear === startYear && checkMonth === startMonth && checkDay < startDay)) {
-      return false;
-  } else if (checkYear > endYear || (checkYear === endYear && checkMonth > endMonth) ||
-             (checkYear === endYear && checkMonth === endMonth && checkDay > endDay)) {
-      return false;
+  if (
+    checkYear < startYear ||
+    (checkYear === startYear && checkMonth < startMonth) ||
+    (checkYear === startYear &&
+      checkMonth === startMonth &&
+      checkDay < startDay)
+  ) {
+    return false;
+  } else if (
+    checkYear > endYear ||
+    (checkYear === endYear && checkMonth > endMonth) ||
+    (checkYear === endYear && checkMonth === endMonth && checkDay > endDay)
+  ) {
+    return false;
   } else {
-      return true;
+    return true;
   }
 }
 
-
 export let meta: MetaFunction = (d) => {
   const { convent } = d.data;
-  const {startDate, endDate} = convent
+  const { startDate, endDate } = convent;
   return [
     {
       title: `${convent.theme}`,
     },
     {
       name: "description",
-      content: `Sammankomst - ${convent.theme} (${convent.location} ${getDatesForSchedule(startDate).isoDate } - ${getDatesForSchedule(endDate).isoDate})`,
+      content: `Sammankomst - ${convent.theme} (${convent.location} ${
+        getDatesForSchedule(startDate).isoDate
+      } - ${getDatesForSchedule(endDate).isoDate})`,
     },
     {
       property: "twitter:image",
@@ -98,47 +107,61 @@ export let meta: MetaFunction = (d) => {
   ];
 };
 
-export const loader: LoaderFunction = async ({request, params}) => {
-
-  let scheduleDate = params.scheduleDate || ""
+export const loader: LoaderFunction = async ({ request, params }) => {
+  let scheduleDate = params.scheduleDate || "";
   if (!params.conventId) {
-    return redirect('/events');
+    return redirect("/events");
   }
-  const {user} = await verifyUserSession(request)
+  const { user } = await verifyUserSession(request);
   if (!user) {
-    return redirect("/")
+    return redirect("/");
   }
 
   const conventId = parseInt(params.conventId, 10);
 
   if (isNaN(conventId)) {
-    return redirect('/events');
+    return redirect("/events");
   }
 
-  const convent = await prisma.convent.findFirst({
-    where: {
-      id: conventId
-    }
+  const conventConditions: any = {
+    userId: user.id,
+    conventId: conventId,
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (user.role !== "ADMIN") {
+    conventConditions.convent = {
+      endDate: {
+        gte: today,
+      },
+    };
+  }
+
+  const userConvent = await prisma.userConvent.findFirst({
+    where: conventConditions,
+    include: {
+      convent: true,
+    },
   });
 
-  if (!convent) {
-    return redirect("/events")
+  if (!userConvent) {
+    return redirect("/events");
   }
 
-  
+  const convent = userConvent.convent;
+
   if (params.scheduleDate?.length !== 8) {
-    const {date} = getDatesForSchedule(convent.startDate)
-    scheduleDate = date
-
-
-    
-    return redirect(`/schedule/${convent.id}/${date}`)
+    const { date } = getDatesForSchedule(convent.startDate);
+    scheduleDate = date;
+    return redirect(`/schedule/${convent.id}/${date}`);
   } else {
     let s = parseInt(scheduleDate || "", 10);
-    if ((s + "").length !== params.scheduleDate?.length){
-      const {date} = getDatesForSchedule(convent.startDate)
-      scheduleDate = date
-      return redirect(`/schedule/${convent.id}/${date}`)
+    if ((s + "").length !== params.scheduleDate?.length) {
+      const { date } = getDatesForSchedule(convent.startDate);
+      scheduleDate = date;
+      return redirect(`/schedule/${convent.id}/${date}`);
     }
   }
   const year = parseInt(scheduleDate.substring(0, 4), 10);
@@ -146,19 +169,32 @@ export const loader: LoaderFunction = async ({request, params}) => {
   const day = parseInt(scheduleDate.substring(6, 8), 10);
   let dateObject = new Date(year, month, day);
 
-  if(!isSameOrBefore(convent.startDate, convent.endDate, dateObject)) {
-    const {date} = getDatesForSchedule(convent.startDate)
-    return redirect(`/schedule/${convent.id}/${date}`)
+  if (!isSameOrBefore(convent.startDate, convent.endDate, dateObject)) {
+    const { date } = getDatesForSchedule(convent.startDate);
+    return redirect(`/schedule/${convent.id}/${date}`);
   }
-  
-  const {isoDate, date} = getDatesForSchedule(dateObject)
+
+  const { isoDate, date } = getDatesForSchedule(dateObject);
   const sessions = await getSessionForDate(isoDate, convent.id);
-  return json({sessions, convent, currentDate: date, user, env: process.env.CO_ENV})
+  return json({
+    sessions,
+    convent,
+    currentDate: date,
+    user,
+    env: process.env.CO_ENV,
+  });
 };
 
 const SessionComponent = (props: SessionProps) => {
-
-  const { id, startHour, startMinutes, stopHour, stopMinutes, type, publishers } = props;
+  const {
+    id,
+    startHour,
+    startMinutes,
+    stopHour,
+    stopMinutes,
+    type,
+    publishers,
+  } = props;
   const minutes = calculateMinutes(
     startHour,
     startMinutes,
@@ -232,7 +268,10 @@ const SessionComponent = (props: SessionProps) => {
   }, [updateTextPosition]);
 
   const topPosition = textHeight > 0 ? textHeight : 0;
-  const name = publishers && publishers.length ? publishers.map((p) => p.publisher.name).join(",") : ""
+  const name =
+    publishers && publishers.length
+      ? publishers.map((p) => p.publisher.name).join(",")
+      : "";
 
   return (
     <div
@@ -284,7 +323,6 @@ const SessionComponent = (props: SessionProps) => {
                 {renderTime(stopHour, stopMinutes)})
               </span>
               <span className="text-sm pr-1"> {formatName(name)}</span>
-             
             </span>
           </div>
         </div>
@@ -314,8 +352,11 @@ const VerticalBarWithStatus = (props: Session) => {
             className={`${colors?.stepDone} h-full`}
             style={{
               height: `${
-                type === SessionType.VIDEO || type === SessionType.MUSIC ? 100 : 
-                (steps.filter((s: SessionStep) => s.isCompleted).length / steps.length) * 100
+                type === SessionType.VIDEO || type === SessionType.MUSIC
+                  ? 100
+                  : (steps.filter((s: SessionStep) => s.isCompleted).length /
+                      steps.length) *
+                    100
               }%`,
             }}
           ></div>
@@ -358,14 +399,11 @@ const renderTimeInterval = (hour: number, index: number) => {
     .filter(Boolean); // Filtrera bort null-värden
 };
 
-
-
 const ColumnLayout = () => {
   const { sessions, user, env } = useLoaderData<ConventLoaderType>();
-  const navigator = useNavigate()
-  useAuthRevalidation(env)
-  useSessionStepRevalidator()
- 
+  const navigator = useNavigate();
+  useAuthRevalidation(env);
+  useSessionStepRevalidator();
 
   return (
     <>
@@ -421,19 +459,21 @@ const ColumnLayout = () => {
                     minHeight: `${maxTimeInPixels}px`,
                   }}
                 >
-                  {sessions.map((e: Session, index: number): JSX.Element | null => {
-                    const layer = getLayerBySessionType(e.type);
-                    const eventStartInMinutes =
-                      e.startHour * 60 + e.startMinutes;
-                    const eventEndInMinutes = e.stopHour * 60 + e.stopMinutes;
-                    if (
-                      layer !== i ||
-                      eventEndInMinutes < min * 60 ||
-                      eventStartInMinutes > max * 60
-                    )
-                      return null;
-                    return <VerticalBarWithStatus {...e} key={index} />;
-                  })}
+                  {sessions.map(
+                    (e: Session, index: number): JSX.Element | null => {
+                      const layer = getLayerBySessionType(e.type);
+                      const eventStartInMinutes =
+                        e.startHour * 60 + e.startMinutes;
+                      const eventEndInMinutes = e.stopHour * 60 + e.stopMinutes;
+                      if (
+                        layer !== i ||
+                        eventEndInMinutes < min * 60 ||
+                        eventStartInMinutes > max * 60
+                      )
+                        return null;
+                      return <VerticalBarWithStatus {...e} key={index} />;
+                    }
+                  )}
                 </div>
               );
             })}
@@ -441,30 +481,30 @@ const ColumnLayout = () => {
         </div>
       </div>
       {user && user.role === "ADMIN" ? (
-          <div className="fixed right-5  bottom-6 md:bottom-6">
-            <button
-              onClick={() => {
-                navigator(`./session/new`);
-              }}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded-full inline-flex items-center justify-center shadow-lg transform transition duration-150 ease-in-out hover:scale-110"
-              style={{ width: "3rem", height: "3rem" }} // Adjust the size as needed
+        <div className="fixed right-5  bottom-6 md:bottom-6">
+          <button
+            onClick={() => {
+              navigator(`./session/new`);
+            }}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded-full inline-flex items-center justify-center shadow-lg transform transition duration-150 ease-in-out hover:scale-110"
+            style={{ width: "3rem", height: "3rem" }} // Adjust the size as needed
+          >
+            <svg
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              className="w-6 h-6"
             >
-              <svg
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-          </div>
-        ) : null}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
+        </div>
+      ) : null}
     </>
   );
 };
