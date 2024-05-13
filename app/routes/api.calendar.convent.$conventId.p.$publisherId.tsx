@@ -85,11 +85,11 @@ export const loader: LoaderFunction = async ({ params }) => {
 
         podiumPracticeDescription = "\n\nPodieövning:\n";
         for (const groupSession of groupSessions) {
-           if (groupSession.id !== id) {
+          if (groupSession.id !== id) {
             for (const sp of groupSession.publishers) {
-              podiumPracticeDescription += `${sp.publisher.name}\n${groupSession.theme}(${groupSession.identifier})\n\n`;
+              podiumPracticeDescription += `- ${sp.publisher.name}: ${groupSession.theme}(${groupSession.identifier})\n`;
+            }
           }
-           }
         }
       }
 
@@ -97,7 +97,9 @@ export const loader: LoaderFunction = async ({ params }) => {
         start: startDate,
         end: endDate,
         summary: `${theme} (${identifier})`,
-        description: publisherNames ? `Ansvariga: ${publisherNames}${podiumPracticeDescription}` : podiumPracticeDescription,
+        description: publisherNames
+          ? `Ansvariga: ${publisherNames}${podiumPracticeDescription}`
+          : podiumPracticeDescription,
         timezone: "Europe/Stockholm",
       });
       event.uid(`convent-${conventId}-${publisherId}-${id}`);
