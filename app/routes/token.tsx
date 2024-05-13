@@ -17,6 +17,35 @@ export const action: ActionFunction = async ({ request }) => {
     if (!user) {
       return json({error: `${phoneNumber} hittades inte för någon användare`})
     }
+    const userConvents = await prisma.user.findUnique({
+      where: {
+        id: user.id,
+      },
+      select: {
+        userConvents: {
+          select: {
+            convent: true,
+          },
+        },
+      },
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let events = userConvents?.userConvents.map(userConvent => userConvent.convent) || []
+    if (user.role !== 'ADMIN') {
+      events = events.filter(event => {
+        const endDate = new Date(event.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate >= today;
+      });
+    }
+  
+  
+    if (!events.length) {
+      return json({error: `Inga event kopplade till ${phoneNumber}`})
+    }
+
 
    return json({user})
   }
