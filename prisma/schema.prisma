@@ -59,6 +59,7 @@ model Convent {
   sessions    Session[] @relation("ConventSessions") // Detta skapar en en-till-många-relation mellan Convent och Session
   conventType   ConventType
   conventCircuits ConventCircuit[]
+  userConvents    UserConvent[]
 }
 
 model GroupSession {
@@ -106,6 +107,7 @@ model User {
   name        String
   role        Role
   phoneNumber String
+  userConvents UserConvent[]
 }
 
 model Publisher {
@@ -136,4 +138,14 @@ model ConventCircuit {
   convent   Convent @relation(fields: [conventId], references: [id])
 
   @@unique([conventId, circuit, section])
+}
+
+model UserConvent {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  conventId  Int
+  user       User     @relation(fields: [userId], references: [id])
+  convent    Convent  @relation(fields: [conventId], references: [id])
+
+  @@unique([userId, conventId])
 }
