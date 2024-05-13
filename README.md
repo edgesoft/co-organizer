@@ -6,7 +6,7 @@ Firebase and do the following.
 
 `base64  co-organizer-firebase-adminsdk-4bc6a-f64a0f0c66.json > test.txt`
 
-This vill save the content of the json file in the test.txt file. You should set the key in .env file the following way.
+This will save the content of the json file in the test.txt file. You should set the key in .env file the following way.
 
 FIREBASE_ADMIN_SDK=`The content of the test.txt file`
 
