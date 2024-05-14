@@ -114,7 +114,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   }
   const { user } = await verifyUserSession(request);
   if (!user) {
-    return redirect("/");
+    return redirect(`/?conventId=${params.conventId}`);
   }
 
   const conventId = parseInt(params.conventId, 10);

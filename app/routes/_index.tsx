@@ -15,6 +15,8 @@ import { Bounce, toast } from "react-toastify";
 import { verifyUserSession } from "~/services/cookie.server";
 import { useLoaderData } from "@remix-run/react";
 import { classNames } from "~/utils/classnames";
+import { prisma } from "~/services/db.server";
+import { getDatesForSchedule } from "~/utils/helpers";
 
 export function Icon() {
   return (
@@ -82,6 +84,30 @@ export function Icon() {
 }
 
 export let meta: MetaFunction = (d) => {
+  console.log(d);
+  if (d.data && d.data.convent) {
+    const convent = d.data.convent;
+    const { startDate, endDate } = convent;
+    return [
+      {
+        title: `${convent.theme}`,
+      },
+      {
+        name: "description",
+        content: `Sammankomst - ${convent.theme} (${convent.location} ${
+          getDatesForSchedule(startDate).isoDate
+        } - ${getDatesForSchedule(endDate).isoDate})`,
+      },
+      {
+        property: "twitter:image",
+        content: `${convent.image}`,
+      },
+      {
+        property: "og:image",
+        content: `${convent.image}`,
+      },
+    ];
+  }
   return [
     {
       title: `Sammankomster`,
@@ -106,7 +132,15 @@ export const loader: LoaderFunction = async ({ request }) => {
     return redirect("/events");
   }
 
-  return { env: process.env.CO_ENV };
+  const url = new URL(request.url);
+  const conventId = url.searchParams.get("conventId");
+  const convent = conventId
+    ? await prisma.convent.findUnique({
+        where: { id: parseInt(conventId) || 0 },
+      })
+    : null;
+
+  return { env: process.env.CO_ENV, convent };
 };
 
 const showError = (error: string) => {
@@ -237,15 +271,14 @@ export default function Index() {
     };
   }, [firebaseProcess, showVerificationInput]);
 
-
   useEffect(() => {
     let timer: NodeJS.Timeout | number | undefined = undefined;
     let p = 0;
     if (SMSProgress.start > 0) {
       timer = setInterval(() => {
         p = p + 2;
-        if (p + SMSProgress.start < 100) 
-        setSMSProgress({ start: p + SMSProgress.start, stop: 100 });
+        if (p + SMSProgress.start < 100)
+          setSMSProgress({ start: p + SMSProgress.start, stop: 100 });
       }, 100);
     }
 
@@ -253,7 +286,6 @@ export default function Index() {
       clearInterval(timer);
     };
   }, [SMSProgress.start]);
-
 
   const isValidPhoneNumber = (phoneNumber: string) => {
     return phoneNumberRegex.test(phoneNumber);
@@ -282,8 +314,7 @@ export default function Index() {
 
   const handleVerificationSubmit = async () => {
     if (env === "development") {
-
-      setSMSProgress({start: 1, stop: 100})
+      setSMSProgress({ start: 1, stop: 100 });
       setTimeout(async () => {
         await fetcher.submit(
           { phoneNumber: phoneNumber, idToken: phoneNumber },
@@ -302,11 +333,10 @@ export default function Index() {
           theme: "light",
           transition: Bounce,
         });
-      }, 5000)
-     
+      }, 5000);
     } else {
       try {
-        setSMSProgress({start: 1, stop: 100})
+        setSMSProgress({ start: 1, stop: 100 });
         const credential = await confirmationResult.confirm(verificationCode);
         const user = credential.user;
         const idToken = await getIdToken(user);
@@ -330,7 +360,7 @@ export default function Index() {
           transition: Bounce,
         });
       } catch (error) {
-        setSMSProgress({start: 0, stop: 100})
+        setSMSProgress({ start: 0, stop: 100 });
         setFirebaseProcess(false);
         setRevalidate(false);
         showError(error.message);
@@ -364,7 +394,8 @@ export default function Index() {
             ></div>
           </div>
         ) : null}
-        {SMSProgress.start > 0 ? <div
+        {SMSProgress.start > 0 ? (
+          <div
             className="absolute bg-slate-300 rounded-t-lg"
             style={{ height: 15, width: "calc(100%)", left: 0, top: 0 }}
           >
@@ -377,7 +408,8 @@ export default function Index() {
                 height: 15,
               }}
             ></div>
-          </div>: null}
+          </div>
+        ) : null}
 
         <h1 className="text-3xl font-bold text-center text-slate-700 mb-6">
           Logga in
@@ -411,7 +443,7 @@ export default function Index() {
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === "" || isValidPartialNumber(value)) {
-                    handlePhoneNumberChange(e); 
+                    handlePhoneNumberChange(e);
                   }
                 }}
                 disabled={revalidate || fetcher.state === "submitting"}

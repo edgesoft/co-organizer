@@ -81,6 +81,7 @@ export const loader: LoaderFunction = async ({ params }) => {
               },
             },
           },
+          orderBy: [{ startHour: "asc" }, { startMinutes: "asc" }],
         });
 
         podiumPracticeDescription = "\n\nPodieövning:\n";
