@@ -10,15 +10,8 @@ import {
   useNavigate,
   useParams,
 } from "@remix-run/react";
-import { MouseEventHandler, useEffect, useState } from "react";
 import { prisma } from "~/services/db.server";
-import { Controller, useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import AsyncSelect from "react-select/async";
-import { type OptionsOrGroups } from "react-select";
 import { classNames } from "~/utils/classnames";
-import { Bounce, toast } from "react-toastify";
 
 export const loader: LoaderFunction = async ({ params, request }) => {
   if (!params.conventId) {
@@ -53,7 +46,6 @@ export const loader: LoaderFunction = async ({ params, request }) => {
 export let action: ActionFunction = async ({ request, params }) => {
   const data = await request.json();
 
-
   await prisma.sessionStep.deleteMany({
     where: {
       sessionId: data.sessionId,
@@ -72,9 +64,7 @@ export let action: ActionFunction = async ({ request, params }) => {
     },
   });
 
-  return redirect(
-    `/schedule/${params.conventId}/${params.scheduleDate}`
-  );
+  return redirect(`/schedule/${params.conventId}`);
 };
 
 export default function Session() {

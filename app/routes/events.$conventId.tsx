@@ -22,11 +22,7 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     return { status: 404, error: "Convent not found" };
   }
 
-  const isoDate: string = convent.startDate.toISOString().split('T')[0];
-  const formattedDateString: string = isoDate.replace(/-/g, '');
-
-  // Kolla om vi redan är på önskad URL, annars omdirigera dit
-  const currentUrl = `/schedule/${conventId}/${formattedDateString}`;
+  const currentUrl = `/schedule/${conventId}`;
   return redirect(currentUrl)
 };
 

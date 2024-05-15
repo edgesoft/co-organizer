@@ -150,3 +150,15 @@ export const getDatesForSchedule = (d) => {
 
   return {isoDate, date: formattedDateString}
 }
+
+export const getDatesInRange = (startDate: string | number | Date, endDate: string | number | Date) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const dateList = [];
+
+  for (let date = start; date <= end; date.setDate(date.getDate() + 1)) {
+    dateList.push(new Date(date));
+  }
+
+  return dateList;
+};

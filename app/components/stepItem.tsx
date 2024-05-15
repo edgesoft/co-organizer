@@ -1,4 +1,4 @@
-import { SessionType, StepType } from "@prisma/client";
+import { StepType } from "@prisma/client";
 import { useFetcher } from "@remix-run/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -11,7 +11,15 @@ import {
   renderTime,
 } from "~/utils/helpers";
 
-const StepName = ({ id, stepType, isGroup }: { id: number; stepType: StepType, isGroup: boolean }) => {
+const StepName = ({
+  id,
+  stepType,
+  isGroup,
+}: {
+  id: number;
+  stepType: StepType;
+  isGroup: boolean;
+}) => {
   const fetcher = useFetcher();
 
   if (isGroup || stepType !== StepType.PODIUM_PRACTICE_DONE)
@@ -32,10 +40,7 @@ const StepName = ({ id, stepType, isGroup }: { id: number; stepType: StepType, i
     }
   }, [id]);
 
-  if (
-    fetcher &&
-    fetcher.data 
-  ) {
+  if (fetcher && fetcher.data) {
     const day = capitalizeFirstLetter(
       new Date(fetcher.data.date).toLocaleDateString("sv-SE", {
         weekday: "long",

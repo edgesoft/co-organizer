@@ -23,3 +23,6 @@ export type ConventLoaderType = {
 };
 
 
+export type HeaderProps = {
+  onKeyDown: (searchTerm: string) => void;
+};

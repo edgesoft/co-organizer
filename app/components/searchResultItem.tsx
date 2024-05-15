@@ -7,18 +7,18 @@ import {
 } from "@prisma/client";
 import { useFetcher, useLoaderData, useNavigate } from "@remix-run/react";
 import { useEffect, useState } from "react";
+import { useEventSource } from "remix-utils/sse/react";
+import { useUpdateSessionStepEvent } from "~/hooks/useUpdateSessionStepEvent";
+import { SessionProps } from "~/types/types";
+import { classNames } from "~/utils/classnames";
 import {
   capitalizeFirstLetter,
   getLayerColors,
   renderTime,
 } from "~/utils/helpers";
 import StepItem from "./stepItem";
-import { useEventSource } from "remix-utils/sse/react";
-import { useUpdateSessionStepEvent } from "~/hooks/useUpdateSessionStepEvent";
-import { classNames } from "~/utils/classnames";
-import { ConventLoaderType, SessionProps } from "~/types/types";
 
-const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
+export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
   const [currentSteps, setCurrentSteps] = useState<SessionStep[]>([]);
   const {
     identifier,
@@ -178,7 +178,7 @@ const useProgressSteps = (session: Session, steps: SessionStep[]) => {
   ];
 };
 
-const SearchResultItem = (props: Session) => {
+export const SearchResultItem = (props: Session) => {
   const {
     id,
     theme,
@@ -243,10 +243,14 @@ const SearchResultItem = (props: Session) => {
   };
 
   return (
-    <div className={`border-b last:border-b-0  ${detail ? "bg-gray-50" : ""}`}>
+    <div
+      className={`border-b last:border-b-0 w-full  ${
+        detail ? "bg-gray-50" : ""
+      }`}
+    >
       <div
         className={classNames(
-          `p-4 flex`,
+          `px-4 pt-2 pb-2 flex`,
           type === SessionType.VIDEO ||
             type === SessionType.MUSIC ||
             type === SessionType.CHAIR_MAN_ROOM ||
@@ -272,7 +276,7 @@ const SearchResultItem = (props: Session) => {
         }}
       >
         <div
-          style={{ height: 100, width: 10 }}
+          style={{ height: user.role === Role.ADMIN ? 120 : 100, width: 10 }}
           className={`${colors?.background}`}
         >
           <div
@@ -353,7 +357,7 @@ const SearchResultItem = (props: Session) => {
             startMinutes
           )} - ${renderTime(stopHour, stopMinutes)}`}</p>
 
-          {user.role === Role.ADMIN && type !== SessionType.VIDEO ? (
+          {user.role === Role.ADMIN ? (
             <button
               className="mt-1 rounded-md shadow-md bg-blue-700 text-white px-2 py-1 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
               onClick={(e) => {
