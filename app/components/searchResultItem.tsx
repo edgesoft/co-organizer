@@ -60,7 +60,11 @@ export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
       key={id}
       className="relative text-sm bg-white p-2 rounded-md shadow-md mb-2"
     >
-      <span className={`${co?.text} text-xs absolute font-semibold right-1 p-0.5 -mt-1 border ${co?.stepNotDone} rounded-md ${co?.border} shadow-md shadow-black/50`}>{identifier}</span>
+      <span
+        className={`${co?.text} text-xxs absolute font-semibold right-1 px-1 -mt-1 border ${co?.stepNotDone} rounded-md ${co?.border} shadow-md shadow-black/50`}
+      >
+        {identifier}
+      </span>
       <div className="flex flex-row items-center">
         <div
           style={{ height: 80, minWidth: 6 }}
@@ -86,7 +90,6 @@ export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
             className={`flex ${names && names.length ? "" : "text-red-700"}`}
           >
             {names || `Inte tilldelat`}
-            
           </div>
           <div className="flex">{theme}</div>
           {participants ? (
@@ -97,7 +100,7 @@ export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
             startMinutes
           )} - ${renderTime(stopHour, stopMinutes)}`}</p>
         </div>
-        <div className="ml-auto mt-2">
+        <div className="ml-auto mt-4">
           {practiceStep && names && names.length ? (
             <StepItem
               isGroup={true}
@@ -252,7 +255,7 @@ export const SearchResultItem = (props: Session) => {
     >
       <div
         className={classNames(
-          `px-4 pt-2 pb-2 flex`,
+          `px-3 pt-2 pb-2 flex`,
           type === SessionType.VIDEO ||
             type === SessionType.MUSIC ||
             type === SessionType.CHAIR_MAN_ROOM ||
@@ -297,44 +300,53 @@ export const SearchResultItem = (props: Session) => {
           </div>
         </div>
         <div className="pl-2">
-        <span className={`${colors?.text} text-xs absolute font-bold right-2 p-0.5 -mt-1 border ${colors?.stepNotDone} rounded-md ${colors?.border} shadow-md shadow-black/50`}>{identifier}</span>
-         
-            <div className="flex">
-              <h3
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (user.role !== Role.ADMIN || type === SessionType.MUSIC || type === SessionType.VIDEO) return false;
-                  navigate(`./session/${id}/user`);
-                  return false;
-                }}
-                style={
-                  user.role === Role.ADMIN && type !== SessionType.MUSIC && type !== SessionType.VIDEO
-                    ? {
-                        textDecoration: "underline",
-                        textDecorationStyle: "dashed",
-                      }
-                    : {}
-                }
-                className={classNames(
-                  isAssignedStyle() ? "" : "text-red-700",
-                  "font-semibold text-lg"
-                )}
-              >
-                {publishers.length && publishers.length > 0
-                  ? publishers
-                      .map(
-                        (p: { publisher: { name: string } }) => p.publisher.name
-                      )
-                      .join(", ")
-                  : type === SessionType.VIDEO || type === SessionType.MUSIC
-                  ? getSessionType(type)?.label
-                  : "Inte tilldelat"}
-              </h3>
+          <span
+            className={`${colors?.text} text-xs absolute font-bold right-2 p-0.5 -mt-1 border ${colors?.stepNotDone} rounded-md ${colors?.border} shadow-md shadow-black/50`}
+          >
+            {identifier}
+          </span>
 
-            
-            </div>
-          
+          <div className="flex">
+            <h3
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (
+                  user.role !== Role.ADMIN ||
+                  type === SessionType.MUSIC ||
+                  type === SessionType.VIDEO
+                )
+                  return false;
+                navigate(`./session/${id}/user`);
+                return false;
+              }}
+              style={
+                user.role === Role.ADMIN &&
+                type !== SessionType.MUSIC &&
+                type !== SessionType.VIDEO
+                  ? {
+                      textDecoration: "underline",
+                      textDecorationStyle: "dashed",
+                    }
+                  : {}
+              }
+              className={classNames(
+                isAssignedStyle() ? "" : "text-red-700",
+                "font-semibold text-lg"
+              )}
+            >
+              {publishers.length && publishers.length > 0
+                ? publishers
+                    .map(
+                      (p: { publisher: { name: string } }) => p.publisher.name
+                    )
+                    .join(", ")
+                : type === SessionType.VIDEO || type === SessionType.MUSIC
+                ? getSessionType(type)?.label
+                : "Inte tilldelat"}
+            </h3>
+          </div>
+
           {type === SessionType.PRAYER || type === SessionType.TALK ? (
             <h2 className="flex text-sm">
               {publishers.length && publishers.length > 0
@@ -382,9 +394,9 @@ export const SearchResultItem = (props: Session) => {
 
           {(user.role === Role.ADMIN || user.role === Role.WORKER) &&
             currentSteps
-              .filter(f => {
-                if(user.role === Role.ADMIN) return true 
-                return (f.stepType !== StepType.RECEIVED_ASSIGNMENT)
+              .filter((f) => {
+                if (user.role === Role.ADMIN) return true;
+                return f.stepType !== StepType.RECEIVED_ASSIGNMENT;
               })
               .sort((a, b) => a.id - b.id)
               .map((step, index) => {
