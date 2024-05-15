@@ -44,6 +44,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-orange-200",
         stepDone: "bg-orange-500",
         border: "border-orange-500",
+        text: "text-orange-500",
       };
     case SessionType.CHECKING_SPEAKERS:
       return {
@@ -51,6 +52,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-blue-200",
         stepDone: "bg-blue-500",
         border: "border-blue-500",
+        text: "text-blue-500",
       };
     case SessionType.TALK:
       return {
@@ -58,6 +60,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-pink-200",
         stepDone: "bg-pink-500",
         border: "border-pink-500",
+        text: "text-pink-500",
       };
       case SessionType.SKE:
         return {
@@ -65,6 +68,7 @@ export const getLayerColors = (type: SessionType) => {
           stepNotDone: "bg-pink-200",
           stepDone: "bg-pink-500",
           border: "border-pink-500",
+          text: "text-pink-500",
         };
       case SessionType.VIDEO:
       return {
@@ -72,6 +76,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-pink-200",
         stepDone: "bg-pink-500",
         border: "border-pink-500",
+        text: "text-pink-500",
       };
     case SessionType.MUSIC:
       return {
@@ -79,6 +84,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-pink-200",
         stepDone: "bg-pink-500",
         border: "border-pink-500",
+        text: "text-pink-500",
       };
     case SessionType.PODIUM_PRACTICE:
       return {
@@ -86,6 +92,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-teal-200",
         stepDone: "bg-teal-500",
         border: "border-teal-500",
+        text: "text-teal-500",
       };
     case SessionType.PRAYER:
       return {
@@ -93,6 +100,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-pink-200",
         stepDone: "bg-pink-500",
         border: "border-pink-500",
+        text: "text-pink-500",
       };
     case SessionType.CHAIR_MAN:
       return {
@@ -100,6 +108,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-teal-200",
         stepDone: "bg-teal-500",
         border: "border-teal-500",
+        text: "text-teal-500",
       };
   }
 };

@@ -295,6 +295,7 @@ export const SearchResultItem = (props: Session) => {
           </div>
         </div>
         <div className="pl-2">
+        <span className={`${colors?.text} text-xs absolute font-bold right-2 p-0.5 -mt-1 border ${colors?.stepNotDone} rounded-lg ${colors?.border} shadow-md shadow-black/50`}>{identifier}</span>
           {type !== SessionType.MUSIC && (
             <div className="flex">
               <h3
@@ -329,7 +330,7 @@ export const SearchResultItem = (props: Session) => {
                   : "Inte tilldelat"}
               </h3>
 
-              <span className="pl-1 mt-1 text-sm">({identifier})</span>
+            
             </div>
           )}
           {type === SessionType.PRAYER || type === SessionType.TALK ? (
