@@ -276,7 +276,7 @@ export const SearchResultItem = (props: Session) => {
         }}
       >
         <div
-          style={{ height: user.role === Role.ADMIN ? 120 : 100, width: 10 }}
+          style={{ height: user.role === Role.ADMIN ? 120 : 100, minWidth: 10 }}
           className={`${colors?.background}`}
         >
           <div
