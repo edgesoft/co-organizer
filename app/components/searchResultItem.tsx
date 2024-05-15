@@ -60,6 +60,7 @@ export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
       key={id}
       className="relative text-sm bg-white p-2 rounded-md shadow-md mb-2"
     >
+      <span className={`${co?.text} text-xs absolute font-semibold right-1 p-0.5 -mt-1 border ${co?.stepNotDone} rounded-md ${co?.border} shadow-md shadow-black/50`}>{identifier}</span>
       <div className="flex flex-row items-center">
         <div
           style={{ height: 80, minWidth: 6 }}
@@ -84,8 +85,8 @@ export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
           <div
             className={`flex ${names && names.length ? "" : "text-red-700"}`}
           >
-            {names || `Inte tilldelat`}{" "}
-            <span className="pl-1 mt-0.5 text-xs">({identifier})</span>
+            {names || `Inte tilldelat`}
+            
           </div>
           <div className="flex">{theme}</div>
           {participants ? (
@@ -96,7 +97,7 @@ export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
             startMinutes
           )} - ${renderTime(stopHour, stopMinutes)}`}</p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto mt-2">
           {practiceStep && names && names.length ? (
             <StepItem
               isGroup={true}
@@ -296,7 +297,7 @@ export const SearchResultItem = (props: Session) => {
           </div>
         </div>
         <div className="pl-2">
-        <span className={`${colors?.text} text-xs absolute font-bold right-2 p-0.5 -mt-1 border ${colors?.stepNotDone} rounded-lg ${colors?.border} shadow-md shadow-black/50`}>{identifier}</span>
+        <span className={`${colors?.text} text-xs absolute font-bold right-2 p-0.5 -mt-1 border ${colors?.stepNotDone} rounded-md ${colors?.border} shadow-md shadow-black/50`}>{identifier}</span>
          
             <div className="flex">
               <h3

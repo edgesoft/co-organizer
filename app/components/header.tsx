@@ -84,7 +84,7 @@ const Menu = () => {
 const Header: React.FC<HeaderProps> = ({ onKeyDown }) => {
   return (
     <div
-      className="fixed top-0 left-0 w-full border-b border-gray-500 z-50 h-16  backdrop-blur-md flex items-center justify-between pl-1"
+      className="fixed top-0 left-0 w-full border-b border-gray-200 z-50 h-16  backdrop-blur-md flex items-center justify-between pl-1"
       style={{
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",

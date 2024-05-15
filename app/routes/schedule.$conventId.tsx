@@ -208,8 +208,8 @@ const ColumnLayout = () => {
           })}
         </div>
       </div>
-      {user && user.role === "ADMIN" ? (
-        <div className="fixed right-5  bottom-6 md:bottom-6">
+      {user && user.role === Role.ADMIN ? (
+        <div className="fixed right-2  bottom-4 md:bottom-4">
           <button
             onClick={() => {
               navigator(`./session/new`);
