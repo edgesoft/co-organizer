@@ -61,7 +61,7 @@ export const PodiumPraticeStep = ({ session }: { session: SessionProps }) => {
     >
       <div className="flex flex-row items-center">
         <div
-          style={{ height: 60, minWidth: 6 }}
+          style={{ height: 80, minWidth: 6 }}
           className={`${co?.background}`}
         >
           <div

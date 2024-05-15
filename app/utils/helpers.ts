@@ -92,7 +92,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-teal-200",
         stepDone: "bg-teal-500",
         border: "border-teal-500",
-        text: "text-teal-500",
+        text: "text-teal-600",
       };
     case SessionType.PRAYER:
       return {
@@ -108,7 +108,7 @@ export const getLayerColors = (type: SessionType) => {
         stepNotDone: "bg-teal-200",
         stepDone: "bg-teal-500",
         border: "border-teal-500",
-        text: "text-teal-500",
+        text: "text-teal-600",
       };
   }
 };
