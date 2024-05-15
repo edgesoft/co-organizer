@@ -381,6 +381,10 @@ export const SearchResultItem = (props: Session) => {
 
           {(user.role === Role.ADMIN || user.role === Role.WORKER) &&
             currentSteps
+              .filter(f => {
+                if(user.role === Role.ADMIN) return true 
+                return (f.stepType !== StepType.RECEIVED_ASSIGNMENT)
+              })
               .sort((a, b) => a.id - b.id)
               .map((step, index) => {
                 return (
