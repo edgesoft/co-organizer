@@ -10,10 +10,9 @@ export const action: ActionFunction = async ({ request }) => {
   if (!phoneNumber.toString().startsWith("+46")) {
     phoneNumber = `+46${phoneNumber.toString().substring(1,10)}`
   }
-  // this is the first check if phone number exists
-  if (phoneNumber && !idToken) {
 
-    const user = await prisma.user.findFirst({where: {phoneNumber}})
+
+  const user = await prisma.user.findFirst({where: {phoneNumber}})
     if (!user) {
       return json({error: `${phoneNumber} hittades inte för någon användare`})
     }
@@ -40,6 +39,11 @@ export const action: ActionFunction = async ({ request }) => {
         return endDate >= today;
       });
     }
+
+  // this is the first check if phone number exists
+  if (phoneNumber && !idToken) {
+
+    
   
   
     if (!events.length) {
@@ -53,10 +57,8 @@ export const action: ActionFunction = async ({ request }) => {
   // next check if we got idToken from Firebase or if env is development
   const session = await getSession(request.headers.get("Cookie"));
   if (process.env.CO_ENV === "development") {
-    console.log(phoneNumber)
-
     session.set("idToken", phoneNumber);
-    return redirect("/events", {
+    return redirect(events.length === 1 ? `/schedule/${events[0].id}`: "/events", {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
@@ -74,8 +76,7 @@ export const action: ActionFunction = async ({ request }) => {
   
     session.set("idToken", idToken);
   
-    // Login succeeded, send them to the home page.
-    return redirect("/events", {
+    return redirect(events.length === 1 ? `/schedule/${events[0].id}`: "/events", {
       headers: {
         "Set-Cookie": await commitSession(session),
       },

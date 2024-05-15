@@ -84,7 +84,6 @@ export function Icon() {
 }
 
 export let meta: MetaFunction = (d) => {
-  console.log(d);
   if (d.data && d.data.convent) {
     const convent = d.data.convent;
     const { startDate, endDate } = convent;
@@ -129,6 +128,32 @@ export let meta: MetaFunction = (d) => {
 export const loader: LoaderFunction = async ({ request }) => {
   const { user } = await verifyUserSession(request);
   if (user) {
+    const userConvents = await prisma.user.findUnique({
+      where: {
+        id: user.id,
+      },
+      select: {
+        userConvents: {
+          select: {
+            convent: true,
+          },
+        },
+      },
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let events = userConvents?.userConvents.map(userConvent => userConvent.convent) || []
+    if (user.role !== 'ADMIN') {
+      events = events.filter(event => {
+        const endDate = new Date(event.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate >= today;
+      });
+    }
+    if (events.length === 1) {
+      return redirect(`/schedule/${events[0].id}`);
+    }
     return redirect("/events");
   }
 

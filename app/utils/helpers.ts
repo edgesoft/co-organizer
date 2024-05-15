@@ -171,3 +171,25 @@ export const getDatesInRange = (startDate: string | number | Date, endDate: stri
 
   return dateList;
 };
+
+export type SessionTypeOption = {
+  value: SessionType,
+  label: string
+}
+
+export const SessionTypeOptions = [
+  { value: SessionType.TALK, label: "Tal" },
+  { value: SessionType.CHAIR_MAN_ROOM, label: "Ordförande rummet" },
+  { value: SessionType.CHECKING_SPEAKERS, label: "Bocka av talare" },
+  { value: SessionType.MUSIC, label: "Musik" },
+  { value: SessionType.PRAYER, label: "Bön" },
+  { value: SessionType.CHAIR_MAN, label: "Sessionsordförande" },
+  { value: SessionType.PODIUM_PRACTICE, label: "Podieövning" },
+  { value: SessionType.VIDEO, label: "Video" },
+  { value: SessionType.SKE, label: "SKE" },
+];
+
+
+export const getSessionType = (type: SessionType): SessionTypeOption | undefined => {
+  return SessionTypeOptions.find(f => f.value === type);
+};

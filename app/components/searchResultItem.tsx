@@ -14,6 +14,7 @@ import { classNames } from "~/utils/classnames";
 import {
   capitalizeFirstLetter,
   getLayerColors,
+  getSessionType,
   renderTime,
 } from "~/utils/helpers";
 import StepItem from "./stepItem";
@@ -233,7 +234,7 @@ export const SearchResultItem = (props: Session) => {
   };
 
   const isAssignedStyle = () => {
-    if (type == SessionType.VIDEO) return true;
+    if (type === SessionType.VIDEO || type === SessionType.MUSIC) return true;
     if (completedProgress === 0 && type !== SessionType.PODIUM_PRACTICE) {
       return false;
     }
@@ -296,18 +297,18 @@ export const SearchResultItem = (props: Session) => {
         </div>
         <div className="pl-2">
         <span className={`${colors?.text} text-xs absolute font-bold right-2 p-0.5 -mt-1 border ${colors?.stepNotDone} rounded-lg ${colors?.border} shadow-md shadow-black/50`}>{identifier}</span>
-          {type !== SessionType.MUSIC && (
+         
             <div className="flex">
               <h3
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (user.role !== Role.ADMIN) return false;
+                  if (user.role !== Role.ADMIN || type === SessionType.MUSIC || type === SessionType.VIDEO) return false;
                   navigate(`./session/${id}/user`);
                   return false;
                 }}
                 style={
-                  user.role === Role.ADMIN
+                  user.role === Role.ADMIN && type !== SessionType.MUSIC && type !== SessionType.VIDEO
                     ? {
                         textDecoration: "underline",
                         textDecorationStyle: "dashed",
@@ -325,14 +326,14 @@ export const SearchResultItem = (props: Session) => {
                         (p: { publisher: { name: string } }) => p.publisher.name
                       )
                       .join(", ")
-                  : type === SessionType.VIDEO
-                  ? "Video"
+                  : type === SessionType.VIDEO || type === SessionType.MUSIC
+                  ? getSessionType(type)?.label
                   : "Inte tilldelat"}
               </h3>
 
             
             </div>
-          )}
+          
           {type === SessionType.PRAYER || type === SessionType.TALK ? (
             <h2 className="flex text-sm">
               {publishers.length && publishers.length > 0

@@ -9,7 +9,7 @@ import { useFetcher, useLoaderData, useNavigate, useParams } from "@remix-run/re
 import { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { prisma } from "~/services/db.server";
-import { capitalizeFirstLetter } from "~/utils/helpers";
+import { SessionTypeOptions, capitalizeFirstLetter, sessionTypeOptions } from "~/utils/helpers";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -72,17 +72,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const sessionTypeOptions = [
-  { value: SessionType.TALK, label: "Tal" },
-  { value: SessionType.CHAIR_MAN_ROOM, label: "Ordförande rummet" },
-  { value: SessionType.CHECKING_SPEAKERS, label: "Bocka av talare" },
-  { value: SessionType.MUSIC, label: "Musik" },
-  { value: SessionType.PRAYER, label: "Bön" },
-  { value: SessionType.CHAIR_MAN, label: "Sessionsordförande" },
-  { value: SessionType.PODIUM_PRACTICE, label: "Podieövning" },
-  { value: SessionType.VIDEO, label: "Video" },
-  { value: SessionType.SKE, label: "SKE" },
-];
+
 
 const stepTypeOptions = [
   { value: StepType.RECEIVED_ASSIGNMENT, label: "Talaruppdraget godkänt" },
@@ -501,7 +491,7 @@ export default function Session() {
               render={({ field }) => (
                 <Select
                   {...field}
-                  options={sessionTypeOptions}
+                  options={SessionTypeOptions}
                   placeholder={"Välj typ"}
                   isMulti={false}
                   onChange={(selectedOption: Option | null) => {
