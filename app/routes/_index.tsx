@@ -287,6 +287,7 @@ export default function Index() {
     if (!showVerificationInput && firebaseProcess) {
       timer = setInterval(() => {
         p = p + 2;
+        if (p + progress.start < 100)
         setProgress({ start: p, stop: progress.stop });
       }, 100);
     }
