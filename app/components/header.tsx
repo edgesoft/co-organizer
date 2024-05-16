@@ -1,10 +1,25 @@
-import { useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import { useState } from "react";
+import { InputActionMeta } from "react-select";
 import { Bounce, toast } from "react-toastify";
-import { HeaderProps } from "~/types/types";
+import { ConventLoaderType, HeaderProps } from "~/types/types";
+import { capitalizeFirstLetter, getDatesForSchedule } from "~/utils/helpers";
+import Select from "react-select";
 
 const searchToastId = "search-toast-id";
 const menuToastId = "menu-toast-id";
+
+const getDatesInRange = (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const dateList = [];
+
+  for (let date = start; date <= end; date.setDate(date.getDate() + 1)) {
+    dateList.push(new Date(date));
+  }
+
+  return dateList;
+};
 
 const SearchMessage = () => {
   const [index, setIndex] = useState(0);
@@ -82,6 +97,19 @@ const Menu = () => {
 };
 
 const Header: React.FC<HeaderProps> = ({ onKeyDown }) => {
+  const { convent, currentDate } = useLoaderData<ConventLoaderType>();
+  const navigate = useNavigate();
+  const dates = getDatesInRange(convent.startDate, convent.endDate);
+  const weekdays = dates.map((d) => {
+    const { isoDate, date } = getDatesForSchedule(d);
+    return {
+      weekday: capitalizeFirstLetter(
+        d.toLocaleDateString("sv-SE", { weekday: "long" })
+      ),
+      isoDate,
+      date,
+    };
+  });
   return (
     <div
       className="fixed top-0 left-0 w-full border-b border-gray-200 z-50 h-16  backdrop-blur-md flex items-center justify-between pl-1"
@@ -90,8 +118,25 @@ const Header: React.FC<HeaderProps> = ({ onKeyDown }) => {
         WebkitBackdropFilter: "blur(10px)",
       }}
     >
-      <div className="relative pr-1 w-full">
+      <div className="relative pr-1 w-full flex">
+        <div className="flex-shrink-0" style={{ minWidth: "150px" }}>
+          <Select
+            options={weekdays.map((w) => ({ label: w.weekday, value: w.date }))}
+            placeholder={"Välj typ"}
+            isMulti={false}
+            defaultValue={{ value: currentDate.date, label: capitalizeFirstLetter(
+              new Date(currentDate.isoDate).toLocaleDateString("sv-SE", { weekday: "long" })
+            )}}
+            onChange={(selectedOption) => {
+              if (!selectedOption) return null
+              navigate(`/schedule/${convent.id}/${selectedOption.value}`);
+            }}
+            ref={null} // Tillfälligt för att undvika en felmeddelande, använd din egen referens här
+            className={`w-full shadow appearance-none border rounded text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-1/4`} // Dynamisk klass för att lägga till en röd ram vid fel
+          />
+        </div>
         <input
+          style={{ maxHeight: 39, minHeight: 39 }}
           type="text"
           name="searchTerm"
           onChange={(e) => {
@@ -100,7 +145,7 @@ const Header: React.FC<HeaderProps> = ({ onKeyDown }) => {
             onKeyDown(e.target.value);
             return false;
           }}
-          className="w-full border border-gray-300 rounded py-2 px-4 text-gray-500 placeholder-gray-300 pr-0.5"
+          className="ml-1 flex-grow border border-gray-300 rounded py-2 px-4 text-gray-500 placeholder-gray-300 pr-0.5"
           placeholder="filtrera..."
         />
         <div className="absolute right-0 pr-2 inset-y-0 flex items-center">

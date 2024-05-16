@@ -1,4 +1,4 @@
-import { getDatesForSchedule } from "~/utils/helpers";
+import { getDateByDateParam, getDatesForSchedule } from "~/utils/helpers";
 import { prisma } from "../services/db.server";
 import { Outlet, useLoaderData, useNavigate } from "@remix-run/react";
 import { ConventLoaderType } from "~/types/types";
@@ -148,6 +148,40 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     };
   }
 
+  let scheduleDate = params.scheduleDate || "";
+  
+  if (params.scheduleDate?.length !== 8) {
+    const { date } = getDatesForSchedule(convent.startDate);
+    scheduleDate = date;
+    return redirect(`/schedule/${convent.id}/${date}`);
+  } else {
+    let s = parseInt(scheduleDate || "", 10);
+    if ((s + "").length !== params.scheduleDate?.length) {
+      const { date } = getDatesForSchedule(convent.startDate);
+      scheduleDate = date;
+      return redirect(`/schedule/${convent.id}/${date}`);
+    }
+  }
+
+  let dateObject = getDateByDateParam(scheduleDate)
+
+  if (!isSameOrBefore(convent.startDate, convent.endDate, dateObject)) {
+    const { date } = getDatesForSchedule(convent.startDate);
+    return redirect(`/schedule/${convent.id}/${date}`);
+  }
+  const { isoDate, date } = getDatesForSchedule(dateObject);
+
+
+  const startDate = new Date(isoDate);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(isoDate);
+  endDate.setHours(23, 59, 59, 999);
+
+  sessionFilter.date = {
+      gte: startDate,
+      lte: endDate,
+  }
 
   const sessions = await prisma.session.findMany({
     where: sessionFilter,
@@ -161,10 +195,17 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     },
     orderBy: [{ date: "asc" }, { startHour: "asc" }, { startMinutes: "asc" }],
   });
+
+ 
+  
   return json({
     sessions,
     convent,
     user,
+    currentDate: {
+      date,
+      isoDate
+    },
     env: process.env.CO_ENV,
   });
 };

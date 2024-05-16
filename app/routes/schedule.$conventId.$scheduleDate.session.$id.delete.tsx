@@ -64,11 +64,10 @@ export let action: ActionFunction = async ({ request, params }) => {
     },
   });
 
-  return redirect(`/schedule/${params.conventId}`);
+  return redirect(`/schedule/${params.conventId}/${params.scheduleDate}`);
 };
 
 export default function Session() {
-  const { conventId } = useParams();
   const fetcher = useFetcher();
   let navigate = useNavigate();
   const { session } = useLoaderData();

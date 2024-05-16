@@ -1,31 +1,39 @@
 import { SessionType, StepType } from "@prisma/client";
 
 const renderTime = (hour: number, minute: number) => {
-    return `${hour.toString().padStart(2, "0")}:${minute
-      .toString()
-      .padStart(2, "0")}`;
-  };
-  
-  const calculateMinutes = (startHour: number, startMinutes: number, stopHour: number, stopMinutes: number) => {
-    return (stopHour - startHour) * 60 + (stopMinutes - startMinutes);
-  };
-  
-  const calculateVerticalBarPosition = (startHour: number, startMinutes: number) => {
-    const minutesFromStart = (startHour - min) * 60 + startMinutes;
-    const verticalBarPosition = minutesFromStart * pixelsPerMinute;
-    return verticalBarPosition;
-  };
-  
-  function formatName(fullName: String) {
-    if (!fullName) return fullName
-    const names = fullName.split(' '); // Delar upp fullständigt namn i delar
-    if (names.length > 1 && names.length < 2) {
-      const firstNameInitial = names[0][0]; // Tar första bokstaven i förnamnet
-      const lastName = names[names.length - 1]; // Tar efternamnet
-      return `${firstNameInitial}. ${lastName}`; // Kombinerar första bokstaven med efternamnet
-    }
-    return fullName; // Returnerar originalnamnet om det inte finns något efternamn
+  return `${hour.toString().padStart(2, "0")}:${minute
+    .toString()
+    .padStart(2, "0")}`;
+};
+
+const calculateMinutes = (
+  startHour: number,
+  startMinutes: number,
+  stopHour: number,
+  stopMinutes: number
+) => {
+  return (stopHour - startHour) * 60 + (stopMinutes - startMinutes);
+};
+
+const calculateVerticalBarPosition = (
+  startHour: number,
+  startMinutes: number
+) => {
+  const minutesFromStart = (startHour - min) * 60 + startMinutes;
+  const verticalBarPosition = minutesFromStart * pixelsPerMinute;
+  return verticalBarPosition;
+};
+
+function formatName(fullName: String) {
+  if (!fullName) return fullName;
+  const names = fullName.split(" "); // Delar upp fullständigt namn i delar
+  if (names.length > 1 && names.length < 2) {
+    const firstNameInitial = names[0][0]; // Tar första bokstaven i förnamnet
+    const lastName = names[names.length - 1]; // Tar efternamnet
+    return `${firstNameInitial}. ${lastName}`; // Kombinerar första bokstaven med efternamnet
   }
+  return fullName; // Returnerar originalnamnet om det inte finns något efternamn
+}
 
 const min = 8;
 const max = 18;
@@ -33,8 +41,17 @@ const pixelsPerMinute = 22;
 const hours = Array.from({ length: max - min + 1 }, (_, index) => index + min);
 const maxTimeInPixels = (max - min) * 60 * pixelsPerMinute;
 
-  export {min, max, pixelsPerMinute, hours, renderTime, calculateMinutes, calculateVerticalBarPosition, formatName, maxTimeInPixels}
-
+export {
+  min,
+  max,
+  pixelsPerMinute,
+  hours,
+  renderTime,
+  calculateMinutes,
+  calculateVerticalBarPosition,
+  formatName,
+  maxTimeInPixels,
+};
 
 export const getLayerColors = (type: SessionType) => {
   switch (type) {
@@ -62,15 +79,15 @@ export const getLayerColors = (type: SessionType) => {
         border: "border-pink-500",
         text: "text-pink-500",
       };
-      case SessionType.SKE:
-        return {
-          background: "bg-pink-50",
-          stepNotDone: "bg-pink-200",
-          stepDone: "bg-pink-500",
-          border: "border-pink-500",
-          text: "text-pink-500",
-        };
-      case SessionType.VIDEO:
+    case SessionType.SKE:
+      return {
+        background: "bg-pink-50",
+        stepNotDone: "bg-pink-200",
+        stepDone: "bg-pink-500",
+        border: "border-pink-500",
+        text: "text-pink-500",
+      };
+    case SessionType.VIDEO:
       return {
         background: "bg-pink-50",
         stepNotDone: "bg-pink-200",
@@ -152,15 +169,17 @@ export function capitalizeFirstLetter(content: String) {
   return content.charAt(0).toUpperCase() + content.slice(1);
 }
 
-
 export const getDatesForSchedule = (d) => {
-  const isoDate: string = new Date(d).toISOString().split('T')[0];
-  const formattedDateString: string = isoDate.replace(/-/g, '');
+  const isoDate: string = new Date(d).toISOString().split("T")[0];
+  const formattedDateString: string = isoDate.replace(/-/g, "");
 
-  return {isoDate, date: formattedDateString}
-}
+  return { isoDate, date: formattedDateString };
+};
 
-export const getDatesInRange = (startDate: string | number | Date, endDate: string | number | Date) => {
+export const getDatesInRange = (
+  startDate: string | number | Date,
+  endDate: string | number | Date
+) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const dateList = [];
@@ -173,9 +192,9 @@ export const getDatesInRange = (startDate: string | number | Date, endDate: stri
 };
 
 export type SessionTypeOption = {
-  value: SessionType,
-  label: string
-}
+  value: SessionType;
+  label: string;
+};
 
 export const SessionTypeOptions = [
   { value: SessionType.TALK, label: "Tal" },
@@ -189,7 +208,15 @@ export const SessionTypeOptions = [
   { value: SessionType.SKE, label: "SKE" },
 ];
 
+export const getSessionType = (
+  type: SessionType
+): SessionTypeOption | undefined => {
+  return SessionTypeOptions.find((f) => f.value === type);
+};
 
-export const getSessionType = (type: SessionType): SessionTypeOption | undefined => {
-  return SessionTypeOptions.find(f => f.value === type);
+export const getDateByDateParam = (scheduleDate: string): Date => {
+  const year = parseInt(scheduleDate.substring(0, 4), 10);
+  const month = parseInt(scheduleDate.substring(4, 6), 10) - 1; // Månader är nollbaserade i JavaScript (0 - 11)
+  const day = parseInt(scheduleDate.substring(6, 8), 10);
+  return new Date(year, month, day);
 };

@@ -5,20 +5,11 @@ import {
   json,
   redirect,
 } from "@remix-run/node";
-import {
-  useFetcher,
-  useLoaderData,
-  useNavigate,
-  useParams,
-} from "@remix-run/react";
+import { useFetcher, useLoaderData, useNavigate, useParams } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import { prisma } from "~/services/db.server";
-import {
-  capitalizeFirstLetter,
-  getDatesForSchedule,
-  renderTime,
-} from "~/utils/helpers";
+import { SessionTypeOptions, capitalizeFirstLetter, getDateByDateParam, sessionTypeOptions } from "~/utils/helpers";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -37,22 +28,21 @@ interface GroupType {
 }
 
 const formSchema = z.object({
-  id: z.string().min(1),
-  identifier: z.custom(
-    (value) => {
-      if (/^\d{2}$/.test(value)) {
-        const num = parseInt(value, 10);
-        return num >= 1 && num <= 99;
-      } else if (/^[a-zA-Z]{3}$/.test(value)) {
-        return true;
-      } else {
-        return false;
-      }
-    },
-    {
-      message: "Identifier must be between 01 and 99",
+  identifier: z
+  .custom((value) => {
+    if (/^\d{2}$/.test(value)) {
+      const num = parseInt(value, 10);
+      return num >= 1 && num <= 99;
+    } else if (/^[a-zA-Z]{3}$/.test(value)) {
+      return true;
+    } else {
+      return false;
     }
-  ),
+  },
+      {
+        message: "Identifier must be between 01 and 99",
+      }
+    ),
   groups: z
     .array(
       z.object({
@@ -82,17 +72,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const sessionTypeOptions = [
-  { value: SessionType.TALK, label: "Tal" },
-  { value: SessionType.CHAIR_MAN_ROOM, label: "Ordförande rummet" },
-  { value: SessionType.CHECKING_SPEAKERS, label: "Bocka av talare" },
-  { value: SessionType.MUSIC, label: "Musik" },
-  { value: SessionType.PRAYER, label: "Bön" },
-  { value: SessionType.CHAIR_MAN, label: "Sessionsordförande" },
-  { value: SessionType.PODIUM_PRACTICE, label: "Podieövning" },
-  { value: SessionType.VIDEO, label: "Video" },
-  { value: SessionType.SKE, label: "SKE" },
-];
+
 
 const stepTypeOptions = [
   { value: StepType.RECEIVED_ASSIGNMENT, label: "Talaruppdraget godkänt" },
@@ -110,29 +90,6 @@ interface Option {
   value: string;
   label: string;
 }
-
-const getPrefix = (sessionType: SessionType) => {
-  switch (sessionType) {
-    case SessionType.CHAIR_MAN:
-      return "S";
-    case SessionType.CHAIR_MAN_ROOM:
-      return "O";
-    case SessionType.CHECKING_SPEAKERS:
-      return "C";
-    case SessionType.MUSIC:
-      return "M";
-    case SessionType.PRAYER:
-      return "B";
-    case SessionType.TALK:
-      return "T";
-    case SessionType.VIDEO:
-      return "V";
-    case SessionType.PODIUM_PRACTICE:
-      return "P";
-    case SessionType.SKE:
-      return "";
-  }
-};
 
 const getDatesInRange = (startDate: Date, endDate: Date) => {
   const start = new Date(startDate);
@@ -168,34 +125,10 @@ export const loader: LoaderFunction = async ({ params, request }) => {
   }
 
   const days = getDatesInRange(convent.startDate, convent.endDate);
-
-  const session = await prisma.session.findUnique({
-    where: {
-      id: Number(params.id),
-    },
-    include: {
-      steps: true,
-    },
-  });
-
-  const { date, isoDate } = getDatesForSchedule(session?.date);
+  let dateObject = getDateByDateParam(params.scheduleDate || "")
+  
 
   return json({
-    session,
-    groups:
-      session?.type === SessionType.PODIUM_PRACTICE && session?.groupSessionId
-        ? await prisma.session.findMany({
-            where: {
-              groupSessionId: session?.groupSessionId,
-              OR: [
-                { type: SessionType.TALK },
-                { type: SessionType.PRAYER },
-                { type: SessionType.CHAIR_MAN },
-              ],
-            },
-            orderBy: [{ startHour: "asc" }, { startMinutes: "asc" }],
-          })
-        : [],
     days: days.map((d) => {
       const isoDate: string = d.toISOString().split("T")[0];
       const formattedDateString: string = isoDate.replace(/-/g, "");
@@ -208,9 +141,9 @@ export const loader: LoaderFunction = async ({ params, request }) => {
       };
     }),
     selectedDay: {
-      value: date,
+      value: params.scheduleDate,
       label: capitalizeFirstLetter(
-        new Date(isoDate).toLocaleDateString("sv-SE", { weekday: "long" })
+        dateObject.toLocaleDateString("sv-SE", { weekday: "long" })
       ),
     },
   });
@@ -243,20 +176,35 @@ export let action: ActionFunction = async ({ request, params }) => {
     const start = getTimeComponents(result.startTime);
     const stop = getTimeComponents(result.stopTime);
 
-    // get the old Session
-    const dbSession = await prisma.session.findUnique({
-      where: { id: Number(data.id) },
-    });
+    const getPrefix = (sessionType: SessionType) => {
+      switch (sessionType) {
+        case SessionType.CHAIR_MAN:
+          return "S";
+        case SessionType.CHAIR_MAN_ROOM:
+          return "O";
+        case SessionType.CHECKING_SPEAKERS:
+          return "C";
+        case SessionType.MUSIC:
+          return "M";
+        case SessionType.PRAYER:
+          return "B";
+        case SessionType.TALK:
+          return "T";
+        case SessionType.VIDEO:
+          return "V";
+        case SessionType.PODIUM_PRACTICE:
+          return "P";
+        case SessionType.SKE:
+          return ""
+      }
+    };
 
     const sessionType =
       SessionType[result.sessionType as keyof typeof SessionType];
 
+    let groupSessionId = null;
     if (sessionType === SessionType.PODIUM_PRACTICE) {
-      // update group session time
-      await prisma.groupSession.update({
-        where: {
-          id: Number(dbSession?.groupSessionId),
-        },
+      const group = await prisma.groupSession.create({
         data: {
           date: dateObject,
           startMinutes: start.minutes,
@@ -266,77 +214,47 @@ export let action: ActionFunction = async ({ request, params }) => {
         },
       });
 
-      // remove old connection to groups except the group post itself
-      await prisma.session.updateMany({
-        where: {
-          id: { not: dbSession?.id },
-          groupSessionId: dbSession?.groupSessionId,
-        },
-        data: {
-          groupSessionId: null,
-        },
-      });
-
-      if (dbSession?.groupSessionId && result.groups) {
-        for (const g of result.groups) {
-          // Uppdatera sessionen med det nya groupID:et
-          await prisma.session.update({
-            where: { id: Number(g.value) }, // Använd value som sessionens id
-            data: { groupSessionId: dbSession?.groupSessionId }, // Uppdatera groupID
-          });
-        }
-      }
+      groupSessionId = group.id;
     }
 
-    // update old session
-    await prisma.session.update({
-      where: {
-        id: Number(dbSession?.id),
-      },
+    const session = await prisma.session.create({
       data: {
+        identifier: `${getPrefix(sessionType)}${result.identifier}`,
+        theme: result.theme,
         date: dateObject,
+        type: sessionType,
+        conventId: Number(params.conventId),
         startMinutes: start.minutes,
         startHour: start.hour,
         stopMinutes: stop.minutes,
         stopHour: stop.hour,
-        theme: result.theme,
-        identifier: `${getPrefix(sessionType)}${result.identifier}`,
+        groupSessionId,
       },
     });
 
-    // get old steps
-    const dbSteps = await prisma.sessionStep.findMany({
-      where: {
-        sessionId: Number(dbSession?.id),
-      },
-    });
+    if (groupSessionId && result.groups) {
+      for (const g of result.groups) {
+        // Uppdatera sessionen med det nya groupID:et
+        await prisma.session.update({
+          where: { id: Number(g.value) }, // Använd value som sessionens id
+          data: { groupSessionId }, // Uppdatera groupID
+        });
+      }
+    }
 
-    // remove old session steps
-    await prisma.sessionStep.deleteMany({
-      where: {
-        sessionId: Number(dbSession?.id),
-      },
-    });
-
-    // preserve completed if possible
     if (result.stepTypes) {
-      const stepTypesData = result.stepTypes.map((type) => {
-        const step = dbSteps.find(
-          (d) => d.stepType === StepType[type.value as keyof typeof StepType]
-        );
-        return {
-          stepType: StepType[type.value as keyof typeof StepType],
-          sessionId: Number(dbSession?.id),
-          isCompleted: step && step.isCompleted ? true : false,
-        };
-      });
+      const stepTypesData = result.stepTypes.map((type) => ({
+        stepType: StepType[type.value as keyof typeof StepType],
+        sessionId: session.id,
+        isCompleted: false,
+      }));
 
       await prisma.sessionStep.createMany({
         data: stepTypesData,
       });
     }
 
-    return redirect(`/schedule/${params.conventId}`);
+    return redirect(`/schedule/${params.conventId}/${params.scheduleDate}`);
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Return a response with the error details
@@ -350,9 +268,9 @@ export let action: ActionFunction = async ({ request, params }) => {
   }
 };
 
-const useGroup = (option: Option | null, groupSessionId: number | null) => {
+const useGroup = (option: Option | null) => {
   const fetcher = useFetcher();
-  const { conventId, id } = useParams();
+  const { conventId } = useParams();
   const [options, setOptions] = useState<OptionsOrGroups<
     OptionType,
     GroupType
@@ -366,7 +284,6 @@ const useGroup = (option: Option | null, groupSessionId: number | null) => {
         fetcher.submit(
           JSON.stringify({
             conventId: conventId || "",
-            groupSessionId,
           }),
           {
             action: "/api/groups",
@@ -393,23 +310,16 @@ const useGroup = (option: Option | null, groupSessionId: number | null) => {
 };
 
 export default function Session() {
-  const { days, selectedDay, session, groups }: LoaderData = useLoaderData();
+  const { days, selectedDay }: LoaderData = useLoaderData();
   const fetcher = useFetcher();
   let navigate = useNavigate();
-
-  const matchedOptions = session.steps.map((option) => {
-    const matchedStep = stepTypeOptions.find(
-      (step) => step.value.toString() === option.stepType.toString()
-    );
-    return matchedStep;
-  });
 
   const [selectedDayOption, setSelectedDayOption] = useState<Option | null>(
     selectedDay ? { value: selectedDay.value, label: selectedDay.label } : null
   );
 
   const [selectedTypeOption, setSelectedTypeOption] = useState<Option | null>(
-    session.type || null
+    null
   );
 
   const [selectedStepTypeOptions, setSelectedStepTypeOptions] = useState<
@@ -417,7 +327,7 @@ export default function Session() {
   >();
 
   const stepTypesRef = useRef(null);
-  let groupData = useGroup(selectedTypeOption, session.groupSessionId);
+  let groupData = useGroup(selectedTypeOption);
 
   const {
     register,
@@ -427,30 +337,14 @@ export default function Session() {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: session.id.toString(),
       day: selectedDayOption?.value || "",
-      identifier: session.identifier.replace(getPrefix(session.type), ""),
-      theme: session.theme,
-      startTime: renderTime(session.startHour, session.startMinutes),
-      stopTime: renderTime(session.stopHour, session.stopMinutes),
-      sessionType: session.type,
-      stepTypes: matchedOptions,
-      groups: groups.map((item) => ({
-        value: item.id.toString(),
-        label: item.theme,
-      })),
     },
   });
 
   useEffect(() => {
-    const t = sessionTypeOptions.find((s) => s.value === session.type);
-    if (t) setSelectedTypeOption(t);
-    stepTypesRef.current.setValue(matchedOptions);
-  }, []);
 
-  useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow =  'hidden';
 
     // Städa upp
     return () => {
@@ -472,6 +366,7 @@ export default function Session() {
       //setSelectedStepTypeOptions([]);
       stepTypesRef.current.clearValue();
     }
+
 
     if (
       selectedOption &&
@@ -509,6 +404,7 @@ export default function Session() {
     );
   };
 
+
   const disableStepTypes = () => {
     if (
       selectedTypeOption &&
@@ -524,6 +420,7 @@ export default function Session() {
     return false;
   };
 
+
   return (
     <div
       className="backdrop-blur-sm fixed inset-0 bg-opacity-50 z-50 flex justify-center items-center "
@@ -532,35 +429,33 @@ export default function Session() {
         WebkitBackdropFilter: "blur(10px)",
       }}
     >
-      <div
-        className="w-full max-w-lg p-5 bg-white rounded-lg shadow-xl  mt-20 mb-20  relative overflow-y-auto"
-        style={{ maxHeight: "90vh" }}
-      >
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          className={classNames(
-            "absolute right-2 top-2 mr-1 text-2xl font-normal leading-none bg-transparent outline-none focus:outline-none"
-          )}
-        >
-          <span
-            onClick={() => {
-              navigate("../");
+      <div className="w-full max-w-lg p-5 bg-white rounded-lg shadow-xl  mt-20 mb-20  relative overflow-y-auto" style={{ maxHeight: '90vh' }}>
+      <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
             }}
+            className={classNames(
+              "absolute right-2 top-2 mr-1 text-2xl font-normal leading-none bg-transparent outline-none focus:outline-none"
+            )}
           >
-            ×
-          </span>
-        </button>
+            <span
+              onClick={() => {
+                navigate("../");
+              }}
+            >
+              ×
+            </span>
+          </button>
         <div className="mb-4 border-b pb-2 ">
           <h2 className="text-2xl font-semibold text-gray-800">
-            Ändra händelse
+            Lägg till händelse
           </h2>
         </div>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 gap-4 mt-8 flex-1"
+          className="grid grid-cols-1 gap-4 mt-8 flex-1" 
+     
         >
           <div>
             <label
@@ -583,6 +478,7 @@ export default function Session() {
               placeholder="Identifier"
             />
           </div>
+          
 
           <div>
             <label
@@ -597,8 +493,7 @@ export default function Session() {
               render={({ field }) => (
                 <Select
                   {...field}
-                  isDisabled={true}
-                  options={sessionTypeOptions}
+                  options={SessionTypeOptions}
                   placeholder={"Välj typ"}
                   isMulti={false}
                   onChange={(selectedOption: Option | null) => {
@@ -724,7 +619,7 @@ export default function Session() {
                     field.onChange(selectedOption?.value);
                     handleDayChange(selectedOption);
                   }}
-                  value={selectedDayOption}
+                  value={selectedDayOption} 
                   ref={null}
                   classNames={{
                     control: (state) => "shadow",
@@ -776,33 +671,18 @@ export default function Session() {
                 type="text"
                 placeholder="HH:mm"
               />
-              <div>
-                <input
-                  {...register("id", { required: true })}
-                  id="id"
-                  name="id"
-                  type="hidden"
-                />
-              </div>
             </div>
           </div>
 
           <div className="flex items-end justify-end">
+            
             <button
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              type="button"
-              onClick={(e) => {
-                navigate(`../session/${session.id}/delete`)
-              }} 
-            >
-              Ta bort
-            </button>
-            <button
-              className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="submit"
             >
               Spara
             </button>
+            
           </div>
         </form>
       </div>

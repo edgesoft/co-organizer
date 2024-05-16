@@ -22,10 +22,19 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     return { status: 404, error: "Convent not found" };
   }
 
-  const currentUrl = `/schedule/${conventId}`;
+
+  const today = new Date(new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm' }));
+  today.setHours(0, 0, 0, 0);
+  let selectedDate = convent.startDate;
+
+  if (today >= convent.startDate && today <= convent.endDate) {
+    selectedDate = today;
+  }
+
+  const isoDate: string = selectedDate.toISOString().split('T')[0];
+  const formattedDateString: string = isoDate.replace(/-/g, '');
+
+  const currentUrl = `/schedule/${conventId}/${formattedDateString}`;
   return redirect(currentUrl)
 };
 
-export default function () {
-  return null;
-}

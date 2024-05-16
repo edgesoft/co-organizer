@@ -135,7 +135,7 @@ export let action: ActionFunction = async ({ request, params }) => {
           })
 
           return redirect(
-            `/schedule/${params.conventId}`
+            `/schedule/${params.conventId}/${params.scheduleDate}`
           );
         }
 

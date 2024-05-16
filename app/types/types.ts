@@ -20,6 +20,10 @@ export type ConventLoaderType = {
   convent: Convent;
   sessions: SessionProps[];
   env: string;
+  currentDate: {
+    date: string
+    isoDate: Date
+  }
 };
 
 
