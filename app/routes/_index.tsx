@@ -155,8 +155,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     if (events.length === 1) {
       const convent = events[0]
       if (convent) {
-        const { date } = getDatesForSchedule(convent.startDate);
-        url = `/schedule/${convent.id}/${date}`
+        url = `/events/${convent.id}`
       }
     }
 

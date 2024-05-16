@@ -119,10 +119,9 @@ const Header: React.FC<HeaderProps> = ({ onKeyDown }) => {
       }}
     >
       <div className="relative pr-1 w-full flex">
-        <div className="flex-shrink-0" style={{ minWidth: "150px" }}>
+        <div className="flex-shrink-0 mr-1" style={{ minWidth: "150px" }}>
           <Select
             options={weekdays.map((w) => ({ label: w.weekday, value: w.date }))}
-            placeholder={"Välj typ"}
             isMulti={false}
             defaultValue={{ value: currentDate.date, label: capitalizeFirstLetter(
               new Date(currentDate.isoDate).toLocaleDateString("sv-SE", { weekday: "long" })
@@ -145,7 +144,7 @@ const Header: React.FC<HeaderProps> = ({ onKeyDown }) => {
             onKeyDown(e.target.value);
             return false;
           }}
-          className="ml-1 flex-grow border border-gray-300 rounded py-2 px-4 text-gray-500 placeholder-gray-300 pr-0.5"
+          className="flex-grow border border-gray-300 rounded py-2 px-4 text-gray-500 placeholder-gray-300 pr-0.5"
           placeholder="filtrera..."
         />
         <div className="absolute right-0 pr-2 inset-y-0 flex items-center">
