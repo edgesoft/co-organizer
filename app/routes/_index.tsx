@@ -151,10 +151,16 @@ export const loader: LoaderFunction = async ({ request }) => {
         return endDate >= today;
       });
     }
+    let url = "/events"
     if (events.length === 1) {
-      return redirect(`/schedule/${events[0].id}`);
+      const convent = events[0]
+      if (convent) {
+        const { date } = getDatesForSchedule(convent.startDate);
+        url = `/schedule/${convent.id}/${date}`
+      }
     }
-    return redirect("/events");
+
+    return redirect(url);
   }
 
   const url = new URL(request.url);

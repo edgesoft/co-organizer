@@ -2,6 +2,7 @@ import { ActionFunction, json, redirect } from "@remix-run/node";
 import { commitSession, getSession } from "~/services/cookie.server";
 import { prisma } from "~/services/db.server";
 import admin from "~/services/firebase.server";
+import { getDatesForSchedule } from "~/utils/helpers";
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
@@ -43,9 +44,6 @@ export const action: ActionFunction = async ({ request }) => {
   // this is the first check if phone number exists
   if (phoneNumber && !idToken) {
 
-    
-  
-  
     if (!events.length) {
       return json({error: `Inga event kopplade till ${phoneNumber}`})
     }
@@ -56,9 +54,18 @@ export const action: ActionFunction = async ({ request }) => {
 
   // next check if we got idToken from Firebase or if env is development
   const session = await getSession(request.headers.get("Cookie"));
+  let url = "/events"
+  if (events.length === 1) {
+    const convent = events[0]
+    if (convent) {
+      const { date } = getDatesForSchedule(convent.startDate);
+      url = `/schedule/${convent.id}/${date}`
+    }
+  }
+
   if (process.env.CO_ENV === "development") {
     session.set("idToken", phoneNumber);
-    return redirect(events.length === 1 ? `/schedule/${events[0].id}`: "/events", {
+    return redirect(url, {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
@@ -75,8 +82,9 @@ export const action: ActionFunction = async ({ request }) => {
     }
   
     session.set("idToken", idToken);
-  
-    return redirect(events.length === 1 ? `/schedule/${events[0].id}`: "/events", {
+
+
+    return redirect(url, {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
