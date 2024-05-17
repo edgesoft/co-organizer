@@ -8,13 +8,13 @@ jobs:
     name: Deploy app production
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Setup Node.js 20
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '21'
+          node-version: '20'
 
       # Setup Flyctl
       - uses: superfly/flyctl-actions/setup-flyctl@master
