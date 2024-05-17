@@ -463,6 +463,9 @@ export default function Index() {
                 placeholder="SMS kod"
                 value={verificationCode}
                 onChange={handleVerificationCodeChange}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="\d{6}"
                 className="w-full px-3 py-2 border rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-200"
               />
             ) : (
