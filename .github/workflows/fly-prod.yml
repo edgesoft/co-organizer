@@ -9,6 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      # Setup Node.js 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '21'
+
+      # Setup Flyctl
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy -a co-organizer --remote-only --config fly-prod.toml --dockerfile Dockerfile
         env:
